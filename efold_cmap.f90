@@ -10,7 +10,7 @@ use multifield_utils
 
 implicit none
 
-real, parameter    :: N_bound = 120.0                     ! Upper bound in N
+real, parameter    :: N_bound = 100.0                     ! Upper bound in N
 real, parameter    :: dt = 1000.0                         ! Time-step
 integer, parameter :: ngrid = 200                         ! Number of grid points
 real               :: efold(ngrid, ngrid)                 ! E-fold number grid
