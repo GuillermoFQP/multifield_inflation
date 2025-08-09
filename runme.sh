@@ -3,6 +3,7 @@
 # ===== Configuration =====
 FC="gfortran"
 FLAGS="-fopenmp -O3 -fdefault-real-8"
+FLAGS2="-fopenmp -Ofast"
 MODULES="multifield_globals.f90 multifield_utils.f90"
 
 # ===== Functions =====
@@ -45,7 +46,7 @@ build_prog2() {
 
 build_prog3() {
     echo "Compiling efold_cmap.f90..."
-    $FC $FLAGS $MODULES efold_cmap.f90 -o efold_cmap.out
+    $FC $FLAGS2 $MODULES efold_cmap.f90 -o efold_cmap.out
 }
 
 run_prog1() {
