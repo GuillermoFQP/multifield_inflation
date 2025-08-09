@@ -3,7 +3,7 @@
 RUNME="./runme.sh"
 PROG="./efold_cmap.out"
 
-# 1. Build ps_mode.out using runme.sh
+# 1. Build efold_cmap.out using runme.sh
 $RUNME build3 || { echo "Build failed"; exit 1; }
 $RUNME clean
 
