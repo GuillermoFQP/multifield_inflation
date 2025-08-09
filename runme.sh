@@ -3,7 +3,7 @@
 # ===== Configuration =====
 FC="gfortran"
 FLAGS="-fopenmp -O3 -fdefault-real-8"
-FLAGS2="-fopenmp -Ofast"
+FLAGS2="-fopenmp -Ofast -ffast-math -funroll-loops"
 MODULES="multifield_globals.f90 multifield_utils.f90"
 
 # ===== Functions =====
