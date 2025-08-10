@@ -29,13 +29,13 @@ phi_min = [-20.0, -20.0]
 phi_max = [ 20.0,  20.0]
 
 ! Define the step size (NGRID-1 intervals between NGRID points)
-dphi = [(phi_max(1) - phi_min(1)) / real(ngrid-1),  (phi_max(2) - phi_min(2)) / real(ngrid-1)]
+dphi = [(phi_max(1) - phi_min(1)) / real(ngrid),  (phi_max(2) - phi_min(2)) / real(ngrid)]
 
 !$OMP PARALLEL DO COLLAPSE(2) SCHEDULE(dynamic) PRIVATE(i, j, phi, phidot, H, N, slowroll, y) SHARED(phi_min, phi_max, dphi, efold)
 do j = 1, ngrid
 	do i = 1, ngrid
 		! Background initial conditions
-		phi    = [phi_min(1) + (i-1) * dphi(1), phi_min(2) + (j-1) * dphi(2)] ! $\phi^{A}(t_{0})$
+		phi    = [phi_min(1) + (i-0.5) * dphi(1), phi_min(2) + (j-0.5) * dphi(2)] ! $\phi^{A}(t_{0})$
 		phidot = [0.0, 0.0]                                                   ! $\dot{\phi}^{A}(t_{0})$
 		H      = Hubble(phi, phidot)                                          ! $H(t_{0})$
 		N      = 0.0                                                          ! $N(t_{0})$
