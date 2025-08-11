@@ -10,9 +10,9 @@ use multifield_utils
 
 implicit none
 
-real, parameter    :: N_bound = 90.0                     ! Upper bound in N
-real, parameter    :: dt = 2000.0                         ! Time-step
-integer, parameter :: ngrid = 200                         ! Number of grid points
+real, parameter    :: N_bound = 100.0                     ! Upper bound in N
+real, parameter    :: dt = 10000.0                        ! Time-step
+integer, parameter :: ngrid = 100                         ! Number of grid points
 real               :: efold(ngrid, ngrid)                 ! E-fold number grid
 real, dimension(6) :: y                                   ! State array
 real, dimension(2) :: phi, phidot, phi_min, phi_max, dphi ! Colormap grid parameters
@@ -36,9 +36,9 @@ do j = 1, ngrid
 	do i = 1, ngrid
 		! Background initial conditions
 		phi    = [phi_min(1) + (i-0.5) * dphi(1), phi_min(2) + (j-0.5) * dphi(2)] ! $\phi^{A}(t_{0})$
-		phidot = [0.0, 0.0]                                                   ! $\dot{\phi}^{A}(t_{0})$
-		H      = Hubble(phi, phidot)                                          ! $H(t_{0})$
-		N      = 0.0                                                          ! $N(t_{0})$
+		phidot = [0.0, 0.0]                                                       ! $\dot{\phi}^{A}(t_{0})$
+		H      = Hubble(phi, phidot)                                              ! $H(t_{0})$
+		N      = 0.0                                                              ! $N(t_{0})$
 
 		! Initialize background arrays
 		call pack_state_background(y, phi, phidot, H, N)

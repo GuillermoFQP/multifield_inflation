@@ -3,7 +3,7 @@
 # ===== Configuration =====
 FC="gfortran"
 FLAGS="-fopenmp -O3 -fdefault-real-8"
-FLAGS2="-fopenmp -Ofast -ffast-math -funroll-loops"
+FLAGS2="-fopenmp -O3"
 MODULES="multifield_globals.f90 multifield_utils.f90"
 
 # ===== Functions =====
@@ -67,7 +67,7 @@ run_prog2() {
 
 run_prog3() {
     if [[ ! -f efold_cmap.out ]]; then
-        build_prog2
+        build_prog3
     fi
     echo "Running efold_cmap.out $@"
     ./efold_cmap.out "$@"

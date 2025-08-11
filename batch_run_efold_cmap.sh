@@ -14,7 +14,7 @@ mkdir -p Frames
 i=1
 
 # 4. Loop over parameter range
-for exp in $(seq -6.0 0.1 6.0); do
+for exp in $(seq -6.0 0.01 3.0); do
 	echo "Computing e-fold colormap for M = exp($exp)"
     M=$(echo "e($exp)" | bc -l)
     $PROG "$M" > "Frames/frame_$i"
