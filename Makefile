@@ -1,0 +1,37 @@
+# Configuration
+FC      := gfortran
+FLAGS   := -fopenmp -O3 -fdefault-real-8
+MODULES := multifield_globals.f90 multifield_utils.f90
+
+# Programs
+PROG1 := ps_full
+PROG2 := ps_mode
+PROG3 := efold_cmap
+
+# Default target
+all: $(EXE1) $(EXE2) $(EXE3)
+
+# Build rules
+$(PROG1): $(MODULES) $(PROG1).f90
+	$(FC) $(FLAGS) $^ -o $@
+
+$(PROG2): $(MODULES) $(PROG2).f90
+	$(FC) $(FLAGS) $^ -o $@
+
+$(PROG3): $(MODULES) $(PROG3).f90
+	$(FC) $(FLAGS) $^ -o $@
+
+# Clean targets
+clean:
+	@echo "Removing .o and .mod files..."
+	@rm -f *.o *.mod
+
+cleanout:
+	@echo "Removing executables..."
+	@rm -f *.out
+
+cleanall: clean cleanout
+
+# Phony targets
+.PHONY: all run1 run2 run3 clean cleanout cleanall
+
