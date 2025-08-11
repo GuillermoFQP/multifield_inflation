@@ -17,10 +17,9 @@ i=1
 for exp in $(seq -6.0 0.01 3.0); do
 	echo "Computing e-fold colormap for M = exp($exp)"
     M=$(echo "e($exp)" | bc -l)
-    $PROG "$M" > "Frames/frame_$i"
+    time $PROG "$M" > "Frames/frame_$i"
     i=$((i + 1))
 done
 
-wait  # Wait for remaining background jobs
 $RUNME cleanall
 echo "All jobs finished."
