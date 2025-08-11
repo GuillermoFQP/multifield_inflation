@@ -9,7 +9,7 @@ PROG2 := ps_mode
 PROG3 := efold_cmap
 
 # Default target
-all: $(EXE1) $(EXE2) $(EXE3)
+all: $(PROG1) $(PROG2) $(PROG3)
 
 # Build rules
 $(PROG1): $(MODULES) $(PROG1).f90
@@ -28,10 +28,10 @@ clean:
 
 cleanout:
 	@echo "Removing executables..."
-	@rm -f *.out
+	@rm -f $(PROG1) $(PROG2) $(PROG3)
 
 cleanall: clean cleanout
 
 # Phony targets
-.PHONY: all run1 run2 run3 clean cleanout cleanall
+.PHONY: all clean cleanout cleanall
 
