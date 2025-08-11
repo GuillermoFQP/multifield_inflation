@@ -1,11 +1,10 @@
 #!/bin/bash
 
-RUNME="./runme.sh"
-PROG="./efold_cmap.out"
+PROG="efold_cmap"
 
 # 1. Build efold_cmap.out using runme.sh
-$RUNME build3 || { echo "Build failed"; exit 1; }
-$RUNME clean
+make $PROG || { echo "Build failed"; exit 1; }
+make clean
 
 # 2. Prepare output directory
 mkdir -p Frames
@@ -17,9 +16,9 @@ i=1
 for exp in $(seq -6.0 0.01 3.0); do
 	echo "Computing e-fold colormap for M = exp($exp)"
     M=$(echo "e($exp)" | bc -l)
-    time $PROG "$M" > "Frames/frame_$i"
+    time ./$PROG "$M" > "Frames/frame_$i"
     i=$((i + 1))
 done
 
-$RUNME cleanall
+make cleanall
 echo "All jobs finished."
