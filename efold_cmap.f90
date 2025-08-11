@@ -12,7 +12,7 @@ implicit none
 
 real, parameter    :: N_bound = 100.0                     ! Upper bound in N
 real, parameter    :: dt = 5000.0                         ! Time-step
-integer, parameter :: ngrid = 50                          ! Number of grid points
+integer, parameter :: ngrid = 200                         ! Number of grid points
 real               :: efold(ngrid, ngrid)                 ! E-fold number grid
 real, dimension(6) :: y                                   ! State array
 real, dimension(2) :: phi, phidot, phi_min, phi_max, dphi ! Colormap grid parameters
