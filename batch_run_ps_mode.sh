@@ -1,11 +1,10 @@
 #!/bin/bash
 
-RUNME="./runme.sh"
-PROG="./ps_mode.out"
+PROG="ps_mode"
 
 # 1. Build ps_mode.out using runme.sh
-$RUNME build2 || { echo "Build failed"; exit 1; }
-$RUNME clean
+make $PROG || { echo "Build failed"; exit 1; }
+make clean
 
 # 2. Prepare output directory
 mkdir -p Frames
@@ -17,17 +16,15 @@ i=1
 # 4. Loop over parameter range
 for exp in $(seq -2.0 0.1 8.0); do
     echo "Computing power spectrum for M = exp($exp)"
-    M=$(echo "e($exp)" | bc -l)   # Calculate M
-    $PROG "$M" > "Frames/frame_$i" &
-
+    M=$(echo "e($exp)" | bc -l)
+    time ./$PROG "$M" > "Frames/frame_$i" &
+    echo
     # Limit concurrent jobs
     if (( i % MAX_JOBS == 0 )); then
         wait
     fi
-
     i=$((i + 1))
 done
 
-wait  # Wait for remaining background jobs
-$RUNME cleanall
+make cleanall
 echo "All jobs finished."
