@@ -235,6 +235,11 @@ pure function metric(phi) result(h_AB)
 			h_AB(1,2) = 0.0
 			h_AB(2,1) = 0.0
 			h_AB(2,2) = 1.0
+		case ("alpha-attractor")
+			h_AB(1,1) = 1.0 / (1.0 - phi(1)**2 / (6.0 * alpha_aa))**2
+			h_AB(1,2) = 0.0
+			h_AB(2,1) = 0.0
+			h_AB(2,2) = 1.0 / (1.0 - phi(2)**2 / (6.0 * beta_aa))**2
 	end select
 
 end function metric
@@ -252,6 +257,11 @@ pure function inv_metric(phi) result(hAB)
 			hAB(1,2) = 0.0
 			hAB(2,1) = 0.0
 			hAB(2,2) = 1.0
+		case ("alpha-attractor")
+			hAB(1,1) = (1.0 - phi(1)**2 / (6.0 * alpha_aa))**2
+			hAB(1,2) = 0.0
+			hAB(2,1) = 0.0
+			hAB(2,2) = (1.0 - phi(2)**2 / (6.0 * beta_aa))**2
 	end select
 
 end function inv_metric
@@ -273,6 +283,15 @@ pure function Christoffel(phi) result(Gamma)
 			Gamma(2,1,2) = 0.0
 			Gamma(2,2,1) = 0.0
 			Gamma(2,2,2) = 0.0
+		case ("alpha-attractor")
+			Gamma(1,1,1) = phi(1) / (3.0 * alpha_aa * (1.0 - phi(1)**2 / (6.0 * alpha_aa)))
+			Gamma(1,1,2) = 0.0
+			Gamma(1,2,1) = 0.0
+			Gamma(1,2,2) = 0.0
+			Gamma(2,1,1) = 0.0
+			Gamma(2,1,2) = 0.0
+			Gamma(2,2,1) = 0.0
+			Gamma(2,2,2) = phi(2) / (3.0 * beta_aa * (1.0 - phi(2)**2 / (6.0 * beta_aa)))
 	end select
 	
 end function Christoffel
@@ -302,6 +321,8 @@ pure function Riemann(phi) result(R)
 			R(2,2,1,2) = 0.0
 			R(2,2,2,1) = 0.0
 			R(2,2,2,2) = 0.0
+		case ("alpha-attractor")
+			R = 0.0
 	end select
 
 end function Riemann
@@ -316,11 +337,13 @@ pure function potential(phi) result(V)
 			V = 0.5 * massfield1**2 * phi(1)**2 + 0.5 * massfield2**2 * phi(2)**2
 		case ("non-linear")
 			V = 0.5 * g_cons * phi(1)**2 * phi(2)**2 + 0.25 * lambda_cons * phi(1)**4 + 0.25 * mu_cons * phi(2)**4
+		case ("hybrid")
+			V = (0.25 / lambda_hp) * (M2_hp**2 - lambda_hp * phi(2)**2)**2 + 0.5 * m1_hp**2 * phi(1)**2 + 0.5 * g_hp**2 * phi(1)**2 * phi(2)**2
 	end select
 
 end function potential
 
-! First covariant derivative of  the potential in the field space $\mathcal{D}_{A} V$
+! Gradient of  the potential in the field space $\mathcal{D}_{A} V$
 pure function NablaV(phi) result(DV)
 	real, intent(in) :: phi(2)
 	real             :: DV(2)
@@ -332,27 +355,56 @@ pure function NablaV(phi) result(DV)
 		case ("non-linear")
 			DV(1) = g_cons * phi(1) * phi(2)**2 + lambda_cons * phi(1)**3
 			DV(2) = g_cons * phi(1)**2 * phi(2) + mu_cons * phi(2)**3
+		case ("hybrid")
+			DV(1) = g_hp**2 * phi(1) * phi(2)**2 + m2_hp**2 * phi(1)
+			DV(2) = g_hp**2 * phi(1)**2 * phi(2) - phi(2) * (M1_hp**2 - lambda_hp*phi(2)**2)
 	end select
 	
 end function NablaV
 
-! Second covariant derivative of the potential in the field space with the first index raised $\mathcal{D}_{B} \mathcal{D}_{A} V$
-pure function NablaNablaV(phi) result(DDV)
+! Hessian of the potential in the field space with the first index raised $\partial_{B} \partial_{A} V$
+pure function HessianV(phi) result(D2V)
 	real, intent(in) :: phi(2)
-	real             :: DDV(2,2)
+	real             :: D2V(2,2)
 	
 	select case (potential_shape)
 		case ("elliptic")
-			DDV(1,1) = massfield1**2 + 2.0 * massfield2**2 * phi(2)**2 / energyscale**2
-			DDV(1,2) = -2.0 * massfield1**2 * phi(1) * phi(2) / (energyscale**2 + 2.0 * phi(2)**2)
-			DDV(2,1) = -2.0 * massfield1**2 * phi(1) * phi(2) / (energyscale**2 + 2.0 * phi(2)**2)
-			DDV(2,2) = massfield2**2
+			D2V(1,1) = massfield1**2
+			D2V(1,2) = 0.0
+			D2V(2,1) = 0.0
+			D2V(2,2) = massfield2**2
 		case ("non-linear")
-			DDV(1,1) = (energyscale**2 * (g_cons * phi(2)**2 + 3.0 * lambda_cons * phi(1)**2) + 2.0 * phi(2)**2 * (g_cons * phi(1)**2 + mu_cons * phi(2)**2)) / energyscale**2
-			DDV(1,2) = 2.0 * phi(1) * phi(2) * (energyscale**2 * g_cons + g_cons * phi(2)**2 - lambda_cons * phi(1)**2) / (energyscale**2 + 2.0 * phi(2)**2)
-			DDV(2,1) = 2.0 * phi(1) * phi(2) * (energyscale**2 * g_cons + g_cons * phi(2)**2 - lambda_cons * phi(1)**2) / (energyscale**2 + 2.0 * phi(2)**2)
-			DDV(2,2) = g_cons * phi(1)**2 + 3.0 * mu_cons * phi(2)**2
+			D2V(1,1) = g_cons*phi(2)**2 + 3.0 * lambda_cons*phi(1)**2
+			D2V(1,2) = 2.0 * g_cons*phi(1) * phi(2)
+			D2V(2,1) = 2.0 * g_cons*phi(1) * phi(2)
+			D2V(2,2) = g_cons*phi(1)**2 + 3.0 * mu_cons*phi(2)**2
+		case ("hybrid")
+			D2V(1,1) = (g_hp**2 * phi(2)**2 + m1_hp**2)
+			D2V(1,2) = 2.0 * g_hp**2 * phi(1) * phi(2)
+			D2V(2,1) = 2.0 * g_hp**2 * phi(1) * phi(2)
+			D2V(2,2) = - M2_hp**2 + g_hp**2 * phi(1)**2 + 3.0 * lambda_hp * phi(2)**2
 	end select
+	
+end function HessianV
+
+! Second covariant derivative of the potential in the field space with the first index raised $\mathcal{D}_{B} \mathcal{D}_{A} V$
+pure function NablaNablaV(phi) result(DDV)
+	real, intent(in) :: phi(2)
+	real             :: DDV(2,2), DV(2), D2V(2,2), Gamma(2,2,2), GammaDV(2,2)
+	integer          :: i, j
+	
+	DV    = NablaV(phi)      ! $\partial_{A} V$
+	D2V   = HessianV(phi)    ! $\partial_{B} \partial_{A} V$
+	Gamma = Christoffel(phi) ! $\Gamma^{A}_{BC}$
+	
+	! $\Gamma^{C}_{AB} \partial_{C} V$
+	do j = 1, 2
+		do i = 1, 2
+			GammaDV(i,j) = sum(Gamma(:,i,j) * DV(:))
+		end do
+	end do
+	
+	DDV = D2V - GammaDV
 	
 end function NablaNablaV
 
