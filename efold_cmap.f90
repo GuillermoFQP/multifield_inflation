@@ -12,7 +12,7 @@ implicit none
 
 real, parameter    :: N_bound = 100.0                     ! Upper bound in N
 real, parameter    :: dt = 5000.0                         ! Time-step
-integer, parameter :: ngrid = 200                         ! Number of grid points
+integer, parameter :: ngrid = 500                         ! Number of grid points
 real               :: efold(ngrid, ngrid)                 ! E-fold number grid
 real, dimension(6) :: y                                   ! State array
 real, dimension(2) :: phi, phidot, phi_min, phi_max, dphi ! Colormap grid parameters
@@ -21,8 +21,10 @@ integer            :: i, j                                ! Indices
 character(len=32)  :: arg                                 ! Command-line argument
 
 ! Parse argument
-call get_command_argument(1, arg)
-read (arg, *) energyscale
+if (field_space_geometry == "Renaux-Petel") then
+	call get_command_argument(1, arg)
+	read (arg, *) energyscale
+end if
 
 ! Define the range for initial conditions
 phi_min = [-20.0, -20.0]
@@ -62,9 +64,7 @@ end do
 !$OMP END PARALLEL DO
 
 do j = 1, ngrid
-	write(*, '(500f10.4)') (efold(i,j), i = 1, ngrid)
+	write (*, '(500f10.4)') (efold(i,j), i = 1, ngrid)
 end do
-
-contains
 
 end program efold_cmap
