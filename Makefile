@@ -7,6 +7,8 @@ MODULES := multifield_globals.f90 multifield_utils.f90
 PROG1 := ps_full
 PROG2 := ps_mode
 PROG3 := efold_cmap
+PROG4 := bkgd_trajs
+PROG5 := potential_cmap
 
 # Default target
 all: $(PROG1) $(PROG2) $(PROG3)
@@ -20,6 +22,12 @@ $(PROG2): $(MODULES) $(PROG2).f90
 
 $(PROG3): $(MODULES) $(PROG3).f90
 	$(FC) $(FLAGS) $^ -o $@
+	
+$(PROG4): $(MODULES) $(PROG4).f90
+	$(FC) $(FLAGS) $^ -o $@
+	
+$(PROG5): $(MODULES) $(PROG5).f90
+	$(FC) $(FLAGS) $^ -o $@
 
 # Clean targets
 clean:
@@ -28,7 +36,7 @@ clean:
 
 cleanout:
 	@echo "Removing executables..."
-	@rm -f $(PROG1) $(PROG2) $(PROG3)
+	@rm -f $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5)
 
 cleanall: clean cleanout
 
