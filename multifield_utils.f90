@@ -338,7 +338,7 @@ pure function potential(phi) result(V)
 		case ("non-linear")
 			V = 0.5 * g_cons * phi(1)**2 * phi(2)**2 + 0.25 * lambda_cons * phi(1)**4 + 0.25 * mu_cons * phi(2)**4
 		case ("hybrid")
-			V = (0.25 / lambda_hp) * (M2_hp**2 - lambda_hp * phi(2)**2)**2 + 0.5 * m1_hp**2 * phi(1)**2 + 0.5 * g_hp**2 * phi(1)**2 * phi(2)**2
+			V = 0.25 * m2_hp**2 * (phi(2)**2 - chi0_hp**2)**2 / chi0_hp**2 + 0.5 * m1_hp**2 * phi(1)**2 + 0.5 * g_hp**2 * phi(1)**2 * phi(2)**2 + mu_hp**3 * phi(2)
 	end select
 
 end function potential
@@ -356,8 +356,8 @@ pure function NablaV(phi) result(DV)
 			DV(1) = g_cons * phi(1) * phi(2)**2 + lambda_cons * phi(1)**3
 			DV(2) = g_cons * phi(1)**2 * phi(2) + mu_cons * phi(2)**3
 		case ("hybrid")
-			DV(1) = g_hp**2 * phi(1) * phi(2)**2 + m2_hp**2 * phi(1)
-			DV(2) = g_hp**2 * phi(1)**2 * phi(2) - phi(2) * (M1_hp**2 - lambda_hp*phi(2)**2)
+			DV(1) = g_hp**2 * phi(1) * phi(2)**2 + m1_hp**2 * phi(1)
+			DV(2) = m2_hp**2 * phi(2) * (-chi0_hp**2 + phi(2)**2) / chi0_hp**2 + g_hp**2 * phi(1)**2 * phi(2) + mu_hp**3
 	end select
 	
 end function NablaV
@@ -379,10 +379,10 @@ pure function HessianV(phi) result(D2V)
 			D2V(2,1) = 2.0 * g_cons*phi(1) * phi(2)
 			D2V(2,2) = g_cons*phi(1)**2 + 3.0 * mu_cons*phi(2)**2
 		case ("hybrid")
-			D2V(1,1) = (g_hp**2 * phi(2)**2 + m1_hp**2)
+			D2V(1,1) = g_hp**2 * phi(2)**2 + m1_hp**2
 			D2V(1,2) = 2.0 * g_hp**2 * phi(1) * phi(2)
 			D2V(2,1) = 2.0 * g_hp**2 * phi(1) * phi(2)
-			D2V(2,2) = - M2_hp**2 + g_hp**2 * phi(1)**2 + 3.0 * lambda_hp * phi(2)**2
+			D2V(2,2) = m2_hp**2 * (phi(2)**2 - chi0_hp**2) / chi0_hp**2 + 2.0 * m2_hp**2 * phi(2)**2 / chi0_hp**2 + g_hp**2 * phi(1)**2
 	end select
 	
 end function HessianV
