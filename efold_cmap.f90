@@ -11,8 +11,9 @@ use multifield_utils
 implicit none
 
 real, parameter    :: N_bound = 100.0                     ! Upper bound in N
-real, parameter    :: dt = 5000.0                         ! Time-step
-integer, parameter :: ngrid = 500                         ! Number of grid points
+!real, parameter    :: dt = 5000.0                         ! Time-step (elliptic and non-linear potentials)
+real, parameter    :: dt = 500.0                          ! Time-step (hybrid potential)
+integer, parameter :: ngrid = 800                         ! Number of grid points
 real               :: efold(ngrid, ngrid)                 ! E-fold number grid
 real, dimension(6) :: y                                   ! State array
 real, dimension(2) :: phi, phidot, phi_min, phi_max, dphi ! Colormap grid parameters
@@ -49,6 +50,7 @@ do j = 1, ngrid
 		slowroll = 0.0
 
 		do while (slowroll <= 1.0 .and. N <= N_bound)
+!		do while (slowroll <= 1.0)
 			! Update functions of time
 			call unpack_state_background(y, phi, phidot, H, N)
 			
@@ -64,7 +66,7 @@ end do
 !$OMP END PARALLEL DO
 
 do j = 1, ngrid
-	write (*, '(500f10.4)') (efold(i,j), i = 1, ngrid)
+	write (*, '(800f10.4)') (efold(i,j), i = 1, ngrid)
 end do
 
 end program efold_cmap
