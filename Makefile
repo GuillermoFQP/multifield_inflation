@@ -11,7 +11,7 @@ PROG4 := bkgd_trajs
 PROG5 := potential_cmap
 
 # Default target
-all: $(PROG1) $(PROG2) $(PROG3)
+all: $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5) 
 
 # Build rules
 $(PROG1): $(MODULES) $(PROG1).f90
