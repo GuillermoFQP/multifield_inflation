@@ -13,8 +13,8 @@ implicit none
 real, parameter    :: N_bound = 500.0                     ! Upper bound in N
 real, parameter    :: dN = 0.01                           ! Data flushing period
 real, parameter    :: dt = 500.0                          ! Time-step
-integer, parameter :: ntrajs = 20                         ! Size of the grid of initial conditions
-real               :: traj(int(1 + N_bound/dN), 2*ntrajs) ! Trajectories array
+integer, parameter :: ntrajsx = 20                        ! Size of the grid of initial conditions
+integer, parameter :: ntrajsy = 10                        ! Size of the grid of initial conditions
 real, dimension(6) :: y                                   ! State array
 real, dimension(2) :: phi, phidot, phi_min, phi_max, dphi ! Colormap grid parameters
 real               :: H, Hdot, N, slowroll, N_flush       ! Variables
@@ -36,11 +36,11 @@ phi_min = [-20.0, -20.0]
 phi_max = [ 20.0,  20.0]
 
 ! Define the step size (NGRID-1 intervals between NGRID points)
-dphi = [(phi_max(1) - phi_min(1)) / real(ntrajs-1), (phi_max(2) - phi_min(2)) / real(ntrajs-1)]
+dphi = [(phi_max(1) - phi_min(1)) / real(ntrajsx-1), (phi_max(2) - phi_min(2)) / real(ntrajsy-1)]
 
 !$OMP PARALLEL DO COLLAPSE(2) SCHEDULE(dynamic) PRIVATE(i, j, phi, phidot, H, N, slowroll, N_flush, k, u, filename, y) SHARED(phi_min, phi_max, dphi)
-do j = 1, ntrajs
-	do i = 1, ntrajs
+do j = 1, ntrajsy
+	do i = 1, ntrajsx
 		! Background initial conditions
 		phi    = [phi_min(1) + real(i-1) * dphi(1), phi_min(2) + real(j-1) * dphi(2)] ! $\phi^{A}(t_{0})$
 		phidot = [0.0, 0.0]                                                           ! $\dot{\phi}^{A}(t_{0})$
@@ -50,10 +50,10 @@ do j = 1, ntrajs
 		! Initialize background arrays
 		call pack_state_background(y, phi, phidot, H, N)
 		
-		slowroll = 0.0                ! Initialize slow-roll parameter $\epsilon(t_{0})$
-		N_flush  = 0.0                ! Data writing trigger
-		k        = (j-1) * ntrajs + i ! Output file number
-		u        = 10 + k             ! Unit number
+		slowroll = 0.0                 ! Initialize slow-roll parameter $\epsilon(t_{0})$
+		N_flush  = 0.0                 ! Data writing trigger
+		k        = (j-1) * ntrajsx + i ! Output file number
+		u        = 10 + k              ! Unit number
 		
 		write (filename, '("trajs/traj_", I0, ".txt")') k
 		open (unit=u, file=filename, status='replace', action='write')
