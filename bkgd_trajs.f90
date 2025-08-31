@@ -14,7 +14,7 @@ real, parameter    :: N_bound = 500.0                     ! Upper bound in N
 real, parameter    :: dN = 0.01                           ! Data flushing period
 real, parameter    :: dt = 500.0                          ! Time-step
 integer, parameter :: ntrajsx = 20                        ! Size of the grid of initial conditions
-integer, parameter :: ntrajsy = 10                        ! Size of the grid of initial conditions
+integer, parameter :: ntrajsy = 20                        ! Size of the grid of initial conditions
 real, dimension(6) :: y                                   ! State array
 real, dimension(2) :: phi, phidot, phi_min, phi_max, dphi ! Colormap grid parameters
 real               :: H, Hdot, N, slowroll, N_flush       ! Variables
