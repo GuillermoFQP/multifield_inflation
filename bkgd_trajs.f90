@@ -10,11 +10,11 @@ use multifield_utils
 
 implicit none
 
-real, parameter    :: N_bound = 500.0                     ! Upper bound in N
+real, parameter    :: N_bound = 200.0                     ! Upper bound in N
 real, parameter    :: dN = 0.01                           ! Data flushing period
 real, parameter    :: dt = 500.0                          ! Time-step
-integer, parameter :: ntrajsx = 20                        ! Size of the grid of initial conditions
-integer, parameter :: ntrajsy = 20                        ! Size of the grid of initial conditions
+integer, parameter :: ntrajsx = 6                         ! Size of the grid of initial conditions
+integer, parameter :: ntrajsy = 6                         ! Size of the grid of initial conditions
 real, dimension(6) :: y                                   ! State array
 real, dimension(2) :: phi, phidot, phi_min, phi_max, dphi ! Colormap grid parameters
 real               :: H, Hdot, N, slowroll, N_flush       ! Variables
@@ -58,7 +58,9 @@ do j = 1, ntrajsy
 		write (filename, '("trajs/traj_", I0, ".txt")') k
 		open (unit=u, file=filename, status='replace', action='write')
 		
-		do while (slowroll <= 1.0 .or. abs(abs(phi(2))-2.5) >= 1.0d-3 .or. abs(phi(1)) >= 1.0d-3)
+		do while (slowroll <= 1.0 .or. abs(abs(phi(2))-2.5) >= 1.0d-3 .or. abs(phi(1)) >= 1.0d-3) ! Condition for hybrid potential
+!		do while (slowroll <= 1.0 .or. abs(phi(2)) >= 1.0d-3 .or. abs(phi(1)) >= 1.0d-3)          ! Condition for Elliptic potential
+!		do while (slowroll <= 1.0 .or. abs(phi(1)) >= 1.0d-3)                                     ! Condition for non-linear potential
 !		do while (N <= N_bound)
 !		do while (abs(phi(1)) >= 0.05)
 			! Update functions of time
@@ -79,7 +81,5 @@ do j = 1, ntrajsy
 	end do
 end do
 !$OMP END PARALLEL DO
-
-contains
 
 end program bkgd_trajs
