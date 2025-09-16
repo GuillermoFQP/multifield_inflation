@@ -3,8 +3,8 @@ module multifield_globals
 implicit none
 
 real, parameter             :: pi = 4.0 * atan(1.0)                     ! Constant
-character(len=*), parameter :: field_space_geometry = "alpha-attractor" ! Choose between "Euclidean", "Renaux-Petel" or "alpha-attractor"
-character(len=*), parameter :: potential_shape = "hybrid"               ! Choose between "elliptic", "non-linear" or "hybrid"
+character(len=*), parameter :: field_space_geometry = "EUM"             ! Choose between "EUM" for Euclidean, "RPM" for Renaux-Petel, or "AAM" for alpha-attractor
+character(len=*), parameter :: potential_shape = "ELP"                  ! Choose between "ELP" for elliptic, "NLP" for non-linear, or "HYP" for hybrid
 real, parameter             :: massfield1 = 1.4d-6                      ! Elliptic potential parameters
 real, parameter             :: massfield2 = 7.0 * massfield1            ! Elliptic potential parameters
 real, parameter             :: lambda_cons = 1.d-14                     ! Non-linear potential parameters
