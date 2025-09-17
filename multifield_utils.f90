@@ -362,7 +362,7 @@ pure function NablaV(phi) result(DV)
 	
 end function NablaV
 
-! Hessian of the potential in the field space with the first index raised $\partial_{B} \partial_{A} V$
+! Hessian of the potential in the field space $\partial_{B} \partial_{A} V$
 pure function HessianV(phi) result(D2V)
 	real, intent(in) :: phi(2)
 	real             :: D2V(2,2)

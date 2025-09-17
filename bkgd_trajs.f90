@@ -21,6 +21,7 @@ real               :: H, Hdot, N, slowroll, N_flush       ! Variables
 integer            :: i, j, k, u                          ! Indices
 character(len=32)  :: arg                                 ! Command-line argument
 character(len=100) :: filename                            ! Output file name
+logical            :: condition                           ! Loop condition
 
 ! Parse argument
 if (field_space_geometry == "Renaux-Petel") then
@@ -58,11 +59,13 @@ do j = 1, ntrajsy
 		write (filename, '("trajs/traj_", I0, ".txt")') k
 		open (unit=u, file=filename, status='replace', action='write')
 		
-		do while (slowroll <= 1.0 .or. abs(abs(phi(2))-2.5) >= 1.0d-3 .or. abs(phi(1)) >= 1.0d-3) ! Condition for hybrid potential
+		condition = .true.
+		
+!		do while (slowroll <= 1.0 .or. abs(abs(phi(2))-2.5) >= 1.0d-3 .or. abs(phi(1)) >= 1.0d-3) ! Condition for hybrid potential
 !		do while (slowroll <= 1.0 .or. abs(phi(2)) >= 1.0d-3 .or. abs(phi(1)) >= 1.0d-3)          ! Condition for Elliptic potential
 !		do while (slowroll <= 1.0 .or. abs(phi(1)) >= 1.0d-3)                                     ! Condition for non-linear potential
 !		do while (N <= N_bound)
-!		do while (abs(phi(1)) >= 0.05)
+		do while (condition)
 			! Update functions of time
 			call unpack_state_background(y, phi, phidot, H, N)
 			
@@ -75,6 +78,16 @@ do j = 1, ntrajsy
 			end if
 			
 			call gl8_background(y, dt)
+			
+			! Update condition
+			select case (potential_shape)
+				case ("ELP")
+					condition = slowroll <= 1.0 .or. abs(phi(2)) >= 1.0d-3 .or. abs(phi(1)) >= 1.0d-3
+				case ("NLP")
+					condition = slowroll <= 1.0 .or. abs(phi(1)) >= 1.0d-3
+				case ("HYP")
+					condition = slowroll <= 1.0 .or. abs(abs(phi(2))-2.5) >= 1.0d-3 .or. abs(phi(1)) >= 1.0d-3
+			end select
 		end do
 		
 		close (u)
