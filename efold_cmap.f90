@@ -11,9 +11,9 @@ use multifield_utils
 implicit none
 
 real, parameter    :: N_bound = 100.0                     ! Upper bound in N
-!real, parameter    :: dt = 5000.0                         ! Time-step (elliptic and non-linear potentials)
-real, parameter    :: dt = 500.0                          ! Time-step (hybrid potential)
-integer, parameter :: ngrid = 800                         ! Number of grid points
+real, parameter    :: dt = 5000.0                         ! Time-step (elliptic and non-linear potentials)
+!real, parameter    :: dt = 500.0                          ! Time-step (hybrid potential)
+integer, parameter :: ngrid = 200                         ! Number of grid points
 real               :: efold(ngrid, ngrid)                 ! E-fold number grid
 real, dimension(6) :: y                                   ! State array
 real, dimension(2) :: phi, phidot, phi_min, phi_max, dphi ! Colormap grid parameters
@@ -22,7 +22,7 @@ integer            :: i, j                                ! Indices
 character(len=32)  :: arg                                 ! Command-line argument
 
 ! Parse argument
-if (field_space_geometry == "Renaux-Petel") then
+if (field_space_geometry == "RPM") then
 	call get_command_argument(1, arg)
 	read (arg, *) energyscale
 end if
@@ -49,8 +49,8 @@ do j = 1, ngrid
 		! Initialize slow-roll parameter $\epsilon(t_{0})$
 		slowroll = 0.0
 
-		do while (slowroll <= 1.0 .and. N <= N_bound)
-!		do while (slowroll <= 1.0)
+!		do while (slowroll <= 1.0 .and. N <= N_bound)
+		do while (slowroll <= 1.0)
 			! Update functions of time
 			call unpack_state_background(y, phi, phidot, H, N)
 			

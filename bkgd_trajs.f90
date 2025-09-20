@@ -24,7 +24,7 @@ character(len=100) :: filename                            ! Output file name
 logical            :: condition                           ! Loop condition
 
 ! Parse argument
-if (field_space_geometry == "Renaux-Petel") then
+if (field_space_geometry == "RPM") then
 	call get_command_argument(1, arg)
 	read (arg, *) energyscale
 end if
