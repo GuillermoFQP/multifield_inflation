@@ -9,9 +9,10 @@ PROG2 := ps_mode
 PROG3 := efold_cmap
 PROG4 := bkgd_trajs
 PROG5 := potential_cmap
+PROG6 := omega_eff
 
 # Default target
-all: $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5) 
+all: $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5) $(PROG6)
 
 # Build rules
 $(PROG1): $(MODULES) $(PROG1).f90
@@ -28,6 +29,9 @@ $(PROG4): $(MODULES) $(PROG4).f90
 	
 $(PROG5): $(MODULES) $(PROG5).f90
 	$(FC) $(FLAGS) $^ -o $@
+	
+$(PROG6): $(MODULES) $(PROG6).f90
+	$(FC) $(FLAGS) $^ -o $@
 
 # Clean targets
 clean:
@@ -36,7 +40,7 @@ clean:
 
 cleanout:
 	@echo "Removing executables..."
-	@rm -f $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5)
+	@rm -f $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5) $(PROG6)
 
 cleanall: clean cleanout
 
