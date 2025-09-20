@@ -581,5 +581,50 @@ pure function Sym(A) result(SymA)
 
 end function Sym
 
+! Compute the orthonormal matrix $\mathbf{U}$ such that $\mathbf{U^{\intercal} M U}$ is diagonal, where $\mathbf{M}$ is symmetric
+subroutine diagonalization(M, U, eigenvalues)
+	real, intent(in)  :: M(2,2)
+	real, intent(out) :: U(2,2), eigenvalues(2)
+	real              :: discriminant, v1(2), v2(2)
+	
+	! Calculate discriminant
+	discriminant = (M(1,1) - M(2,2))**2 + 4.0 * M(1,2) * M(2,1)
+
+	! Check for complex eigenvalues
+	 if (discriminant < 0.0) then
+		 write(*,*) 'ERROR: Complex eigenvalues detected in mass matrix (discriminant = ', discriminant, ')'
+		 error stop 'Complex eigenvalues not allowed in s - terminating program'
+	 end if
+
+	! Compute eigenvalues
+	eigenvalues(1) = (M(1,1) + M(2,2) + sqrt(discriminant)) / 2.0
+	eigenvalues(2) = (M(1,1) + M(2,2) - sqrt(discriminant)) / 2.0
+
+	if (abs(M(1,2)) < epsilon(1.0)) then
+		! Handle case where $\mathbf{M}$ is already diagonal
+		U = reshape([1.0, 0.0, 0.0, 1.0], [2,2])
+	else if (abs(M(1,1) - eigenvalues(1)) > epsilon(1.0)) then
+		! Calculate first eigenvector: $(\mathbf{M} - \lambda_{1} \mathbf{I}) \mathbf{v}_{1} = 0$
+		! We solve the first equation $(M_{11} - \lambda_{1}) x + M_{12} y = 0$
+		! Choose $y = 1$, then $x = - M_{12} / (M_{11} - \lambda_{1})$
+		v1(1) = - M(1,2) / (M(1,1) - eigenvalues(1))
+		v1(2) = 1.0
+	else
+		! If $M_{11} - \lambda_{1} = 0$, then from $M_{21} x + (M_{22} - \lambda_{1})y = 0$
+		! Since M_{12} \ne 0$ (checked above), set $y = 1$ then $x = - (M_{22} - \lambda_{1}) / M_{21}$
+		v1(1) = - (M(2,2) - eigenvalues(1)) / M(2,1)
+		v1(2) = 1.0
+	end if
+
+	! Normalize V1
+	v1 = v1 / norm2(v1)
+
+	! Second eigenvector is orthogonal to the first (since $M$ is symmetric)
+	v2 = [-v1(2), v1(1)]
+
+	! Construct $U$ matrix
+	U = reshape([v1, v2], [2,2])
+
+end subroutine diagonalization
 
 end module multifield_utils
