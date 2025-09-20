@@ -38,8 +38,10 @@ logical              :: trigger                                     ! Mode trigg
 character(len=32)    :: arg                                         ! Command-line argument
 
 ! Parse argument
-call get_command_argument(1, arg)
-read (arg, *) energyscale
+if (field_space_geometry == "RPM") then
+	call get_command_argument(1, arg)
+	read (arg, *) energyscale
+end if
 
 !========================================================================================================
 ! Background
