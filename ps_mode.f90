@@ -48,9 +48,11 @@ end if
 !========================================================================================================
 ! Background initial conditions
 select case (potential_shape)
-	case ("elliptic")
+	case ("ELP")
 		phi = [12.0, 12.0]
-	case ("non-linear")
+	case ("NLP")
+		phi = [20.0, 20.0]
+	case ("HYP")
 		phi = [20.0, 20.0]
 end select
 

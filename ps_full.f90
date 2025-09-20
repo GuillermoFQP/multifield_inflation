@@ -54,6 +54,8 @@ select case (potential_shape)
 		phi = [12.0, 12.0]
 	case ("non-linear")
 		phi = [20.0, 20.0]
+	case ("HYP")
+		phi = [20.0, 20.0]
 end select
 
 phidot = [0.0,  0.0]         ! $\dot{\phi}^{A}(t_{0})$
