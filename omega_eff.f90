@@ -53,6 +53,10 @@ select case (potential_shape)
 		phi = [12.0, 12.0]
 	case ("NLP")
 		phi = [20.0, 20.0]
+	case ("HYP")
+		phi = [20.0, 20.0]
+	case ("MVP")
+		phi = [8.0, 8.0]
 end select
 
 phidot = [0.0,  0.0]         ! $\dot{\phi}^{A}(t_{0})$
@@ -62,8 +66,8 @@ N      = 0.0                 ! $N(t_{0})$
 ! Initialize background arrays
 call pack_state_background(y_back, phi, phidot, H, N)
 
-trigger   = .true. ! Counter
-slowroll  = 0.0    ! Initialize slow-roll parameter $\epsilon(t_{0})$
+trigger  = .true. ! Initialize perturbation trigger
+slowroll = 0.0    ! Initialize slow-roll parameter $\epsilon(t_{0})$
 
 do while (slowroll <= 1.0)
 	! Update functions of time

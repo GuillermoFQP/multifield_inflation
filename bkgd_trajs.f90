@@ -33,8 +33,20 @@ end if
 call execute_command_line('rm -rf trajs; mkdir trajs')
 
 ! Define the range for initial conditions
-phi_min = [-20.0, -20.0]
-phi_max = [ 20.0,  20.0]
+select case (potential_shape)
+	case ("ELP")
+		phi_min = [-20.0, -20.0]
+		phi_max = [ 20.0,  20.0]
+	case ("NLP")
+		phi_min = [-20.0, -20.0]
+		phi_max = [ 20.0,  20.0]
+	case ("HYP")
+		phi_min = [-20.0, -20.0]
+		phi_max = [ 20.0,  20.0]
+	case ("MVP")
+		phi_min = [-20.0, -20.0]
+		phi_max = [ 20.0,  20.0]
+end select
 
 ! Define the step size (NGRID-1 intervals between NGRID points)
 dphi = [(phi_max(1) - phi_min(1)) / real(ntrajsx-1), (phi_max(2) - phi_min(2)) / real(ntrajsy-1)]
@@ -73,7 +85,7 @@ do j = 1, ntrajsy
 			slowroll = - Hubbledot(phi, phidot) / H**2
 			
 			if (N >= N_flush) then
-				write (u,'(7(6e25.10e3))') phi, potential(phi), N
+				write (u,'(7(6e25.10e3))') phi, potential(phi), N, slowroll
 				N_flush = N_flush + dN
 			end if
 			
@@ -87,6 +99,8 @@ do j = 1, ntrajsy
 					condition = slowroll <= 1.0 .or. abs(phi(1)) >= 1.0d-3
 				case ("HYP")
 					condition = slowroll <= 1.0 .or. abs(abs(phi(2))-2.5) >= 1.0d-3 .or. abs(phi(1)) >= 1.0d-3
+				case ("MVP")
+					condition = slowroll <= 1.0 .or. abs(phi(1)) >= 5.0d-1 .or. abs(phi(2)) >= 5.0d-1
 			end select
 		end do
 		

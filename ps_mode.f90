@@ -21,8 +21,9 @@ use multifield_utils
 
 implicit none
 
-real, parameter      :: N_trigger = 0.5                             ! Mode trigger
-real, parameter      :: dt_back = 20.0, dt_pert = 20.0              ! Time steps
+real, parameter      :: N_trigger = 2.5                             ! Mode trigger
+real, parameter      :: dt_back = 500.0                             ! Background time step
+real, parameter      :: dt_pert = 20.0                              ! Perturbation time step (~0.1 for HYP and ~20.0 for NLP and ELP)
 real, dimension(6)   :: y_back                                      ! Background state array
 real, dimension(28)  :: y_pert                                      ! Background + perturbation state array
 real, dimension(2)   :: phi, phidot                                 ! Field multiplet and its time derivative
@@ -54,6 +55,8 @@ select case (potential_shape)
 		phi = [20.0, 20.0]
 	case ("HYP")
 		phi = [20.0, 20.0]
+	case ("MVP")
+		phi = [8.0, 8.0]
 end select
 
 phidot = [0.0,  0.0]         ! $\dot{\phi}^{A}(t_{0})$
@@ -124,6 +127,8 @@ call pack_state_perturbations(y_pert, phi, phidot, H, N, vbein_PT, Re_r1, Im_r1,
 N_flush = N
 
 do while (slowroll <= 1.0)
+!do while (slowroll <= 1.0 .or. abs(abs(phi(2))-2.5) >= 1.0d-2 .or. abs(phi(1)) >= 1.0d-2)
+!do while (slowroll <= 1.0 .or. abs(phi(1)) >= 5.0d-1 .or. abs(phi(2)) >= 5.0d-1)
 	! Update functions of time
 	call unpack_state_perturbations(y_pert, phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p, theta1_p, theta2_p)
 	
