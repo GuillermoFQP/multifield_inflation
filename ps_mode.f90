@@ -22,8 +22,8 @@ use multifield_utils
 implicit none
 
 real, parameter      :: N_trigger = 2.5                             ! Mode trigger
-real, parameter      :: dt_back = 500.0                             ! Background time step
-real, parameter      :: dt_pert = 20.0                              ! Perturbation time step (~0.1 for HYP and ~20.0 for NLP and ELP)
+real, parameter      :: dt_back = 2000.0                            ! Background time step
+real, parameter      :: dt_pert = 30.0                              ! Perturbation time step (~0.1 for HYP and ~20.0 for NLP and ELP)
 real, dimension(6)   :: y_back                                      ! Background state array
 real, dimension(28)  :: y_pert                                      ! Background + perturbation state array
 real, dimension(2)   :: phi, phidot                                 ! Field multiplet and its time derivative

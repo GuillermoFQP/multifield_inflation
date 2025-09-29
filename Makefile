@@ -1,6 +1,7 @@
 # Configuration
 FC      := gfortran
-FLAGS   := -fopenmp -O3 -fdefault-real-8
+#FLAGS   := -fopenmp -O3 -fdefault-real-8
+FLAGS   := -fopenmp -O3 -fdefault-real-8 -ffast-math
 MODULES := multifield_globals.f90 multifield_utils.f90
 
 # Programs

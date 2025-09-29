@@ -3,7 +3,7 @@ module multifield_globals
 implicit none
 
 real, parameter             :: pi = 4.0 * atan(1.0)         ! Constant
-character(len=*), parameter :: field_space_geometry = "OWM" ! Choose between "EUM" for Euclidean, "RPM" for Renaux-Petel, or "AAM" for alpha-attractor
+character(len=*), parameter :: field_space_geometry = "EUM" ! Choose between "EUM" for Euclidean, "RPM" for Renaux-Petel, "AAM" for alpha-attractor or "OWM" for oscillating warp metric
 character(len=*), parameter :: potential_shape = "NLP"      ! Choose between "ELP" for elliptic, "NLP" for non-linear, "HYP" for hybrid or "MVP" for modulated valley potential
 real, parameter             :: m1_ELP = 1.4d-6              ! Elliptic potential parameters
 real, parameter             :: m2_ELP = 7.0 * m1_ELP        ! Elliptic potential parameters
@@ -15,7 +15,6 @@ real, parameter             :: m2_HYP = 1.47d-5             ! Hybrid inflation p
 real, parameter             :: m1_HYP = 0.3 * m2_HYP        ! Hybrid inflation potential parameters
 real, parameter             :: g_HYP = 0.8 * m2_HYP         ! Hybrid inflation potential parameters
 real, parameter             :: mu_HYP = 0.0                 ! Hybrid inflation potential parameters
-!real, parameter             :: mu_HYP = -(5.0d-6 * m2_HYP**2)**(1.0/3.0) ! Hybrid inflation potential parameters
 real, parameter             :: m_mvp = 1.4d-6               ! Modulated valley potential parameters
 real, parameter             :: lambda1_mvp = 2.0d-3         ! Modulated valley potential parameters
 real, parameter             :: f1_mvp = 1.0                 ! Modulated valley potential parameters
@@ -25,6 +24,11 @@ real, parameter             :: alpha_aa = 1.0               ! $\alpha$-attractor
 real, parameter             :: beta_aa = 1.0d10             ! $\alpha$-attractor metric parameters
 real, parameter             :: amp_OWM = 0.75               ! Oscillatory warp metric parameters
 real, parameter             :: frq_OWM = 10.0               ! Oscillatory warp metric parameters
+integer, parameter          :: n_GBM = 12                   ! Localized gaussian bumps metric number of bumps
+real, parameter             :: spp_GBM = 5.00               ! Localized gaussian bumps metric support radius
+real, parameter             :: amp_GBM(n_GBM) = [-0.85, -0.85, -0.85, -0.85, -0.95, -0.95, -0.95, -0.95, -0.85, -0.85, -0.85, -0.85] ! Localized gaussian bumps metric parameters
+real, parameter             :: std_GBM(n_GBM) = [ 0.25,  0.25,  0.25,  0.25,  0.25,  0.25,  0.25,  0.25,  0.25,  0.25,  0.25,  0.25] ! Localized gaussian bumps metric parameters
+real, parameter             :: x_GBM(n_GBM)   = [-18.0, -15.0, -12.0,  -9.0,  -6.0,  -3.0,   3.0,   6.0,   9.0,  12.0,  15.0,  18.0] ! Localized gaussian bumps metric parameters
 real                        :: energyscale                  ! Renaux-Petel metric parameter (set at runtime)
 
 end module multifield_globals

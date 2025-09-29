@@ -226,6 +226,7 @@ end function det
 pure function metric(phi) result(h_AB)
 	real, intent(in) :: phi(2)
 	real             :: h_AB(2,2)
+	integer          :: i
 	
 	select case (field_space_geometry)
 		case ("EUM")
@@ -244,7 +245,17 @@ pure function metric(phi) result(h_AB)
 			h_AB(1,1) = 1.0
 			h_AB(1,2) = 0.0
 			h_AB(2,1) = 0.0
-			h_AB(2,2) = amp_OWM*cos(frq_OWM*phi(1)) + 1.0
+			h_AB(2,2) = amp_OWM * cos(frq_OWM * phi(1)) + 1.0
+		case ("GBM")
+			h_AB(1,1) = 1.0
+			h_AB(1,2) = 0.0
+			h_AB(2,1) = 0.0
+			h_AB(2,2) = 1.0
+			do i = 1, n_GBM
+				if (abs(phi(1) - x_GBM(i)) <= spp_GBM * std_GBM(i)) then
+					h_AB(2,2) = 1.0 + amp_GBM(i) * exp(-0.5 * (phi(1) - x_GBM(i))**2 / std_GBM(i)**2)
+				end if
+			end do
 	end select
 
 end function metric
@@ -253,6 +264,7 @@ end function metric
 pure function inv_metric(phi) result(hAB)
 	real, intent(in) :: phi(2)
 	real             :: hAB(2,2)
+	integer          :: i
 	
 	select case (field_space_geometry)
 		case ("EUM")
@@ -271,7 +283,17 @@ pure function inv_metric(phi) result(hAB)
 			hAB(1,1) = 1.0
 			hAB(1,2) = 0.0
 			hAB(2,1) = 0.0
-			hAB(2,2) = 1.0/(1.0*amp_OWM*cos(frq_OWM*phi(1)) + 1.0)
+			hAB(2,2) = 1.0 / (amp_OWM * cos(frq_OWM * phi(1)) + 1.0)
+		case ("GBM")
+			hAB(1,1) = 1.0
+			hAB(1,2) = 0.0
+			hAB(2,1) = 0.0
+			hAB(2,2) = 1.0
+			do i = 1, n_GBM
+				if (abs(phi(1) - x_GBM(i)) <= spp_GBM * std_GBM(i)) then
+					hAB(2,2) = 1.0 / (amp_GBM(i) * exp(-0.5 * (phi(1) - x_GBM(i))**2 / std_GBM(i)**2) + 1.0)
+				end if
+			end do
 	end select
 
 end function inv_metric
@@ -280,37 +302,37 @@ end function inv_metric
 pure function Christoffel(phi) result(Gamma)
 	real, intent(in) :: phi(2)
 	real             :: Gamma(2,2,2)
+	integer          :: i
+	real             :: dx, sd2, dx2, gbmp ! GBM metric variables
+	
+	Gamma = 0.0
 	
 	select case (field_space_geometry)
 		case ("EUM")
-			Gamma = 0.0
+			! Nothing to do
 		case ("RPM")
-			Gamma(1,1,1) = 0.0
 			Gamma(1,1,2) = 2.0 * phi(2) / (energyscale**2 + 2.0 * phi(2)**2)
-			Gamma(1,2,1) = 2.0 * phi(2) / (energyscale**2 + 2.0 * phi(2)**2)
-			Gamma(1,2,2) = 0.0
+			Gamma(1,2,1) = Gamma(1,1,2)
 			Gamma(2,1,1) = -2.0 * phi(2) / energyscale**2
-			Gamma(2,1,2) = 0.0
-			Gamma(2,2,1) = 0.0
-			Gamma(2,2,2) = 0.0
 		case ("AAM")
 			Gamma(1,1,1) = phi(1) / (3.0 * alpha_aa * (1.0 - phi(1)**2 / (6.0 * alpha_aa)))
-			Gamma(1,1,2) = 0.0
-			Gamma(1,2,1) = 0.0
-			Gamma(1,2,2) = 0.0
-			Gamma(2,1,1) = 0.0
-			Gamma(2,1,2) = 0.0
-			Gamma(2,2,1) = 0.0
-			Gamma(2,2,2) = phi(2) / (3.0 * beta_aa * (1.0 - phi(2)**2 / (6.0 * beta_aa)))
+			Gamma(2,2,2) = phi(2) / (3.0 *  beta_aa * (1.0 - phi(2)**2 / (6.0 *  beta_aa)))
 		case ("OWM")
-			Gamma(1,1,1) = 0.0
-			Gamma(1,1,2) = 0.0
-			Gamma(1,2,1) = 0.0
-			Gamma(1,2,2) = 0.5*amp_OWM*frq_OWM*sin(frq_OWM*phi(1))
-			Gamma(2,1,1) = 0.0
-			Gamma(2,1,2) = -0.5*amp_OWM*frq_OWM*sin(frq_OWM*phi(1))/(amp_OWM*cos(frq_OWM*phi(1)) + 1.0)
-			Gamma(2,2,1) = -0.5*amp_OWM*frq_OWM*sin(frq_OWM*phi(1))/(amp_OWM*cos(frq_OWM*phi(1)) + 1.0)
-			Gamma(2,2,2) = 0.0
+			Gamma(1,2,2) = 0.5 * amp_OWM * frq_OWM * sin(frq_OWM * phi(1))
+			Gamma(2,1,2) = -0.5 * amp_OWM * frq_OWM * sin(frq_OWM * phi(1)) / (amp_OWM * cos(frq_OWM * phi(1)) + 1.0)
+			Gamma(2,2,1) = Gamma(2,1,2)
+		case ("GBM")
+			do i = 1, n_GBM
+				dx = phi(1) - x_GBM(i)
+				if (abs(dx) <= spp_GBM * std_GBM(i)) then
+					sd2  = std_GBM(i)**2
+					dx2  = dx**2
+					gbmp = exp(-0.5 * dx2 / sd2)
+					Gamma(1,2,2) =  0.5 * amp_GBM(i) * dx * gbmp / sd2
+					Gamma(2,1,2) = -0.5 * amp_GBM(i) * dx * gbmp / (sd2 * (amp_GBM(i) * gbmp + 1.0))
+					Gamma(2,2,1) = Gamma(2,1,2)
+				end if
+			end do
 	end select
 	
 end function Christoffel
@@ -319,47 +341,36 @@ end function Christoffel
 pure function Riemann(phi) result(R)
 	real, intent(in) :: phi(2)
 	real             :: R(2,2,2,2)
+	integer          :: i
+	real             :: dx, sd2, dx2, gbmp ! GBM metric variables
+	
+	R = 0.0
 	
 	select case (field_space_geometry)
 		case ("EUM")
-			R = 0.0
+			! Nothing to do
 		case ("RPM")
-			R(1,1,1,1) = 0.0
-			R(1,1,1,2) = 0.0
-			R(1,1,2,1) = 0.0
-			R(1,1,2,2) = 0.0
-			R(1,2,1,1) = 0.0
 			R(1,2,1,2) = -0.5 / (0.25 * energyscale**2 + 0.5 * phi(2)**2)
-			R(1,2,2,1) = 0.5 / (0.25 * energyscale**2 + 0.5 * phi(2)**2)
-			R(1,2,2,2) = 0.0
-			R(2,1,1,1) = 0.0
-			R(2,1,1,2) = 2.0 / (energyscale**2 + 2.0 * phi(2)**2)
-			R(2,1,2,1) = -2.0 / (energyscale**2 + 2.0 * phi(2)**2)
-			R(2,1,2,2) = 0.0
-			R(2,2,1,1) = 0.0
-			R(2,2,1,2) = 0.0
-			R(2,2,2,1) = 0.0
-			R(2,2,2,2) = 0.0
 		case ("AAM")
-			R = 0.0
+			! Nothing to do
 		case ("OWM")
-			R(1,1,1,1) = 0.0
-			R(1,1,1,2) = 0.0
-			R(1,1,2,1) = 0.0
-			R(1,1,2,2) = 0.0
-			R(1,2,1,1) = 0.0
-			R(1,2,1,2) = amp_OWM*frq_OWM**2*(-0.25*amp_OWM*sin(frq_OWM*phi(1))**2 + 0.5*amp_OWM + 0.5*cos(frq_OWM*phi(1)))/(amp_OWM*cos(frq_OWM*phi(1)) + 1.0)
-			R(1,2,2,1) = amp_OWM*frq_OWM**2*(0.25*amp_OWM*sin(frq_OWM*phi(1))**2 - 0.5*amp_OWM - 0.5*cos(frq_OWM*phi(1)))/(amp_OWM*cos(frq_OWM*phi(1)) + 1.0)
-			R(1,2,2,2) = 0.0
-			R(2,1,1,1) = 0.0
-			R(2,1,1,2) = amp_OWM*frq_OWM**2*(0.25*amp_OWM*sin(frq_OWM*phi(1))**2 - 0.5*amp_OWM - 0.5*cos(frq_OWM*phi(1)))/(amp_OWM*cos(frq_OWM*phi(1)) + 1.0)
-			R(2,1,2,1) = amp_OWM*frq_OWM**2*(-0.25*amp_OWM*sin(frq_OWM*phi(1))**2 + 0.5*amp_OWM + 0.5*cos(frq_OWM*phi(1)))/(amp_OWM*cos(frq_OWM*phi(1)) + 1.0)
-			R(2,1,2,2) = 0.0
-			R(2,2,1,1) = 0.0
-			R(2,2,1,2) = 0.0
-			R(2,2,2,1) = 0.0
-			R(2,2,2,2) = 0.0
+			R(1,2,1,2) = amp_OWM * frq_OWM**2 * (-0.25 * amp_OWM * sin(frq_OWM * phi(1))**2 + 0.5 * amp_OWM + 0.5 * cos(frq_OWM * phi(1))) / (amp_OWM * cos(frq_OWM * phi(1)) + 1.0)
+		case ("GBM")
+			do i = 1, n_GBM
+				dx = phi(1) - x_GBM(i)
+				if (abs(dx) <= spp_GBM * std_GBM(i)) then
+					sd2  = std_GBM(i)**2
+					dx2  = dx**2
+					gbmp = exp(-0.5 * dx2 / sd2)
+					R(1,2,1,2) = amp_GBM(i) * (0.25 * amp_GBM(i) * dx2 * gbmp**2 + 0.5 * sd2 * (amp_GBM(i) * gbmp + 1.0) * gbmp - 0.5 * dx2 * (amp_GBM(i) * gbmp + 1.0) * gbmp) / (sd2**2 * (amp_GBM(i) * gbmp + 1.0))
+				end if
+			end do
 	end select
+	
+	! Symmetries
+	R(1,2,2,1) = -R(1,2,1,2)
+	R(2,1,1,2) = -R(1,2,1,2)
+	R(2,1,2,1) =  R(1,2,1,2)
 
 end function Riemann
 
@@ -367,6 +378,7 @@ end function Riemann
 pure function potential(phi) result(V)
 	real, intent(in) :: phi(2)
 	real             :: V
+	real             :: ds2, ds, cs, sn, ang
 	
 	select case (potential_shape)
 		case ("ELP")
@@ -376,7 +388,15 @@ pure function potential(phi) result(V)
 		case ("HYP")
 			V = 0.25 * m2_HYP**2 * (phi(2)**2 - chi0_HYP**2)**2 / chi0_HYP**2 + 0.5 * m1_HYP**2 * phi(1)**2 + 0.5 * g_HYP**2 * phi(1)**2 * phi(2)**2 + mu_HYP**3 * phi(2)
 		case ("MVP")
-			V = lambda1_mvp**4 * cos(f2_mvp * atan2(phi(2), phi(1)) - f3_mvp * sin(f1_mvp * sqrt(phi(1)**2 + phi(2)**2))) + 0.5 * m_mvp**2 * (phi(1)**2 + phi(2)**2)
+			! Precompute factors
+			ds2 = phi(1)**2 + phi(2)**2
+			ds  = sqrt(ds2)
+			cs  = cos(f1_mvp * ds)
+			sn  = sin(f1_mvp * ds)
+			ang = atan2(phi(2), phi(1))
+			
+			! Final expression
+			V = lambda1_mvp**4 * cos(f2_mvp * ang - f3_mvp * sn) + 0.5 * m_mvp**2 * ds2
 	end select
 
 end function potential
@@ -385,6 +405,7 @@ end function potential
 pure function NablaV(phi) result(DV)
 	real, intent(in) :: phi(2)
 	real             :: DV(2)
+	real             :: ds2, ds, cs, sn, ang
 	
 	select case (potential_shape)
 		case ("ELP")
@@ -397,8 +418,16 @@ pure function NablaV(phi) result(DV)
 			DV(1) = g_HYP**2 * phi(1) * phi(2)**2 + m1_HYP**2 * phi(1)
 			DV(2) = m2_HYP**2 * phi(2) * (-chi0_HYP**2 + phi(2)**2) / chi0_HYP**2 + g_HYP**2 * phi(1)**2 * phi(2) + mu_HYP**3
 		case ("MVP")
-			DV(1) = -lambda1_mvp**4 * (-f1_mvp * f3_mvp * phi(1) * cos(f1_mvp * sqrt(phi(1)**2 + phi(2)**2)) / sqrt(phi(1)**2 + phi(2)**2) - f2_mvp * phi(2) / (phi(1)**2 + phi(2)**2)) * sin(f2_mvp * atan2(phi(2), phi(1)) - f3_mvp * sin(f1_mvp * sqrt(phi(1)**2 + phi(2)**2))) + m_mvp**2 * phi(1)
-			DV(2) = -lambda1_mvp**4 * (-f1_mvp * f3_mvp * phi(2) * cos(f1_mvp * sqrt(phi(1)**2 + phi(2)**2)) / sqrt(phi(1)**2 + phi(2)**2) + f2_mvp * phi(1) / (phi(1)**2 + phi(2)**2)) * sin(f2_mvp * atan2(phi(2), phi(1)) - f3_mvp * sin(f1_mvp * sqrt(phi(1)**2 + phi(2)**2))) + m_mvp**2 * phi(2)
+			! Precompute factors
+			ds2 = phi(1)**2 + phi(2)**2
+			ds  = sqrt(ds2)
+			cs  = cos(f1_mvp * ds)
+			sn  = sin(f1_mvp * ds)
+			ang = atan2(phi(2), phi(1))
+			
+			! Final expression
+			DV(1) = -lambda1_mvp**4 * (-f1_mvp * f3_mvp * phi(1) * cs / ds - f2_mvp * phi(2) / ds2) * sin(f2_mvp * ang - f3_mvp * sn) + m_mvp**2 * phi(1)
+			DV(2) = -lambda1_mvp**4 * (-f1_mvp * f3_mvp * phi(2) * cs / ds + f2_mvp * phi(1) / ds2) * sin(f2_mvp * ang - f3_mvp * sn) + m_mvp**2 * phi(2)
 	end select
 	
 end function NablaV
@@ -407,29 +436,40 @@ end function NablaV
 pure function HessianV(phi) result(D2V)
 	real, intent(in) :: phi(2)
 	real             :: D2V(2,2)
+	real             :: ds2, ds, ds3, cs, sn, css, sns, ang
 	
 	select case (potential_shape)
 		case ("ELP")
 			D2V(1,1) = m1_ELP**2
 			D2V(1,2) = 0.0
-			D2V(2,1) = 0.0
 			D2V(2,2) = m2_ELP**2
 		case ("NLP")
-			D2V(1,1) = g_NLP*phi(2)**2 + 3.0 * lambda_NLP*phi(1)**2
+			D2V(1,1) = g_NLP * phi(2)**2 + 3.0 * lambda_NLP * phi(1)**2
 			D2V(1,2) = 2.0 * g_NLP*phi(1) * phi(2)
-			D2V(2,1) = 2.0 * g_NLP*phi(1) * phi(2)
-			D2V(2,2) = g_NLP*phi(1)**2 + 3.0 * mu_NLP*phi(2)**2
+			D2V(2,2) = g_NLP * phi(1)**2 + 3.0 * mu_NLP * phi(2)**2
 		case ("HYP")
 			D2V(1,1) = g_HYP**2 * phi(2)**2 + m1_HYP**2
 			D2V(1,2) = 2.0 * g_HYP**2 * phi(1) * phi(2)
-			D2V(2,1) = 2.0 * g_HYP**2 * phi(1) * phi(2)
 			D2V(2,2) = m2_HYP**2 * (phi(2)**2 - chi0_HYP**2) / chi0_HYP**2 + 2.0 * m2_HYP**2 * phi(2)**2 / chi0_HYP**2 + g_HYP**2 * phi(1)**2
 		case ("MVP")
-			D2V(1,1) = -lambda1_mvp**4 * (f1_mvp * f3_mvp * phi(1) * cos(f1_mvp * sqrt(phi(1)**2 + phi(2)**2)) / sqrt(phi(1)**2 + phi(2)**2) + f2_mvp * phi(2) / (phi(1)**2 + phi(2)**2))**2 * cos(f2_mvp*atan2(phi(2), phi(1)) - f3_mvp * sin(f1_mvp * sqrt(phi(1)**2 + phi(2)**2))) - lambda1_mvp**4 * (f1_mvp**2 * f3_mvp * phi(1)**2 * sin(f1_mvp * sqrt(phi(1)**2 + phi(2)**2)) / (phi(1)**2 + phi(2)**2) + f1_mvp * f3_mvp * phi(1)**2 * cos(f1_mvp * sqrt(phi(1)**2 + phi(2)**2)) / (phi(1)**2 + phi(2)**2)**(3.0d0/2.0d0) - f1_mvp * f3_mvp * cos(f1_mvp * sqrt(phi(1)**2 + phi(2)**2)) / sqrt(phi(1)**2 + phi(2)**2) + 2.0 * f2_mvp * phi(1) * phi(2) / (phi(1)**2 + phi(2)**2)**2) * sin(f2_mvp * atan2(phi(2), phi(1)) - f3_mvp * sin(f1_mvp * sqrt(phi(1)**2 + phi(2)**2))) + m_mvp**2
-			D2V(1,2) = -lambda1_mvp**4 * ((f1_mvp * f3_mvp * phi(1) * cos(f1_mvp * sqrt(phi(1)**2 + phi(2)**2)) / sqrt(phi(1)**2 + phi(2)**2) + f2_mvp * phi(2) / (phi(1)**2 + phi(2)**2)) * (f1_mvp * f3_mvp * phi(2) * cos(f1_mvp * sqrt(phi(1)**2 + phi(2)**2)) / sqrt(phi(1)**2 + phi(2)**2) - f2_mvp * phi(1) / (phi(1)**2 + phi(2)**2)) * cos(f2_mvp * atan2(phi(2), phi(1)) - f3_mvp * sin(f1_mvp * sqrt(phi(1)**2 + phi(2)**2))) + (f1_mvp**2 * f3_mvp * phi(1) * phi(2) * sin(f1_mvp * sqrt(phi(1)**2 + phi(2)**2)) / (phi(1)**2 + phi(2)**2) + f1_mvp * f3_mvp * phi(1) * phi(2) * cos(f1_mvp * sqrt(phi(1)**2 + phi(2)**2)) / (phi(1)**2 + phi(2)**2)**(3.0d0/2.0d0) + 2.0 * f2_mvp * phi(2)**2 / (phi(1)**2 + phi(2)**2)**2 - f2_mvp / (phi(1)**2 + phi(2)**2)) * sin(f2_mvp * atan2(phi(2), phi(1)) - f3_mvp * sin(f1_mvp * sqrt(phi(1)**2 + phi(2)**2))))
-			D2V(2,1) = -lambda1_mvp**4 * ((f1_mvp * f3_mvp * phi(1) * cos(f1_mvp * sqrt(phi(1)**2 + phi(2)**2)) / sqrt(phi(1)**2 + phi(2)**2) + f2_mvp * phi(2) / (phi(1)**2 + phi(2)**2)) * (f1_mvp * f3_mvp * phi(2) * cos(f1_mvp * sqrt(phi(1)**2 + phi(2)**2)) / sqrt(phi(1)**2 + phi(2)**2) - f2_mvp * phi(1) / (phi(1)**2 + phi(2)**2)) * cos(f2_mvp * atan2(phi(2), phi(1)) - f3_mvp * sin(f1_mvp * sqrt(phi(1)**2 + phi(2)**2))) + (f1_mvp**2 * f3_mvp * phi(1) * phi(2) * sin(f1_mvp * sqrt(phi(1)**2 + phi(2)**2)) / (phi(1)**2 + phi(2)**2) + f1_mvp * f3_mvp * phi(1) * phi(2) * cos(f1_mvp * sqrt(phi(1)**2 + phi(2)**2)) / (phi(1)**2 + phi(2)**2)**(3.0d0/2.0d0) + 2.0 * f2_mvp * phi(2)**2 / (phi(1)**2 + phi(2)**2)**2 - f2_mvp / (phi(1)**2 + phi(2)**2)) * sin(f2_mvp * atan2(phi(2), phi(1)) - f3_mvp * sin(f1_mvp * sqrt(phi(1)**2 + phi(2)**2))))
-			D2V(2,2) = -lambda1_mvp**4 * (f1_mvp * f3_mvp * phi(2) * cos(f1_mvp * sqrt(phi(1)**2 + phi(2)**2)) / sqrt(phi(1)**2 + phi(2)**2) - f2_mvp * phi(1) / (phi(1)**2 + phi(2)**2))**2 * cos(f2_mvp * atan2(phi(2), phi(1)) - f3_mvp * sin(f1_mvp * sqrt(phi(1)**2 + phi(2)**2))) - lambda1_mvp**4 * (f1_mvp**2 * f3_mvp * phi(2)**2 * sin(f1_mvp * sqrt(phi(1)**2 + phi(2)**2)) / (phi(1)**2 + phi(2)**2) + f1_mvp * f3_mvp * phi(2)**2 * cos(f1_mvp * sqrt(phi(1)**2 + phi(2)**2)) / (phi(1)**2 + phi(2)**2)**(3.0d0/2.0d0) - f1_mvp * f3_mvp * cos(f1_mvp * sqrt(phi(1)**2 + phi(2)**2)) / sqrt(phi(1)**2 + phi(2)**2) - 2.0 * f2_mvp * phi(1) * phi(2) / (phi(1)**2 + phi(2)**2)**2) * sin(f2_mvp * atan2(phi(2), phi(1)) - f3_mvp * sin(f1_mvp * sqrt(phi(1)**2 + phi(2)**2))) + m_mvp**2
+			! Precompute factors
+			ds2 = phi(1)**2 + phi(2)**2
+			ds  = sqrt(ds2)
+			ds3 = ds**3
+			cs  = cos(f1_mvp * ds)
+			sn  = sin(f1_mvp * ds)
+			css = cos(f2_mvp * ang - f3_mvp * sn)
+			sns = sin(f2_mvp * ang - f3_mvp * sn)
+			ang = atan2(phi(2), phi(1))
+			
+			! Final expression
+			D2V(1,1) = -lambda1_mvp**4 * (f1_mvp * f3_mvp * phi(1) * cs / ds + f2_mvp * phi(2) / ds2)**2 * css - lambda1_mvp**4 * (f1_mvp**2 * f3_mvp * phi(1)**2 * sn / ds2 + f1_mvp * f3_mvp * phi(1)**2 * cs / ds3 - f1_mvp * f3_mvp * cs / ds + 2.0 * f2_mvp * phi(1) * phi(2) / ds2**2) * sns + m_mvp**2
+			D2V(1,2) = -lambda1_mvp**4 * ((f1_mvp * f3_mvp * phi(1) * cs / ds + f2_mvp * phi(2) / ds2) * (f1_mvp * f3_mvp * phi(2) * cs / ds - f2_mvp * phi(1) / ds2) * css + (f1_mvp**2 * f3_mvp * phi(1) * phi(2) * sn / ds2 + f1_mvp * f3_mvp * phi(1) * phi(2) * cs / ds3 + 2.0 * f2_mvp * phi(2)**2 / ds2**2 - f2_mvp / ds2) * sns)
+			D2V(2,2) = -lambda1_mvp**4 * (f1_mvp * f3_mvp * phi(2) * cs / ds - f2_mvp * phi(1) / ds2)**2 * css - lambda1_mvp**4 * (f1_mvp**2 * f3_mvp * phi(2)**2 * sn / ds2 + f1_mvp * f3_mvp * phi(2)**2 * cs / ds3 - f1_mvp * f3_mvp * cs / ds - 2.0 * f2_mvp * phi(1) * phi(2) / ds2**2) * sns + m_mvp**2
 	end select
+	
+	! Symmetry
+	D2V(2,1) = D2V(1,2)
 	
 end function HessianV
 

@@ -22,8 +22,8 @@ use multifield_utils
 implicit none
 
 real, parameter              :: N_start = 2.5, N_stop = 100.0                    ! Lower and upper bounds for mode injection
-real, parameter              :: N_step = 1.00                                    ! E-fold interval between consecutive mode injections
-real, parameter              :: dt_back = 200.0, dt_pert = 20.0                  ! Time steps
+real, parameter              :: N_step = 0.10                                    ! E-fold interval between consecutive mode injections
+real, parameter              :: dt_back = 200.0, dt_pert = 30.0                  ! Time steps
 real, dimension(6)           :: y_back                                           ! Background state array
 real, dimension(28)          :: y_pert                                           ! Background + perturbation state array
 real, dimension(2)           :: phi, phidot                                      ! Field multiplet and its time derivative
