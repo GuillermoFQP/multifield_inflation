@@ -19,10 +19,10 @@ subroutine pack_state_background(y, phi, phidot, H, N)
 end subroutine pack_state_background
 
 ! Get background + perturbation state array from background + perturbation functions
-subroutine pack_state_perturbations(y, phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p, theta1_p, theta2_p)
-	real, intent(out) :: y(28)
+subroutine pack_state_perturbations(y, phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p)
+	real, intent(out) :: y(26)
 	real, intent(in)  :: phi(2), phidot(2), H, N
-	real, intent(in)  :: vbein_PT(2,2), Re_r1(2), Im_r1(2), Re_r2(2), Im_r2(2), Re_r1_p(2), Im_r1_p(2), Re_r2_p(2), Im_r2_p(2), theta1_p, theta2_p
+	real, intent(in)  :: vbein_PT(2,2), Re_r1(2), Im_r1(2), Re_r2(2), Im_r2(2), Re_r1_p(2), Im_r1_p(2), Re_r2_p(2), Im_r2_p(2)
 
 	y(1:2)   = phi                    ! $\varphi^{A}$
 	y(3:4)   = phidot                 ! $\dot{\varphi}^{A}$
@@ -37,8 +37,6 @@ subroutine pack_state_perturbations(y, phi, phidot, H, N, vbein_PT, Re_r1, Im_r1
 	y(21:22) = Im_r1_p                ! $\mathrm{Im} \, \mathbf{r}_{1}^{\prime}$
 	y(23:24) = Re_r2_p                ! $\mathrm{Re} \, \mathbf{r}_{2}^{\prime}$
 	y(25:26) = Im_r2_p                ! $\mathrm{Im} \, \mathbf{r}_{2}^{\prime}$
-	y(27)    = theta1_p               ! $\theta_{1}^{\prime}$
-	y(28)    = theta2_p               ! $\theta_{2}^{\prime}$
 	
 end subroutine pack_state_perturbations
 
@@ -55,10 +53,10 @@ subroutine unpack_state_background(y, phi, phidot, H, N)
 end subroutine unpack_state_background
 
 ! Get background + perturbation functions from background + perturbation state array
-subroutine unpack_state_perturbations(y, phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p, theta1_p, theta2_p)
-	real, intent(in)  :: y(28)
+subroutine unpack_state_perturbations(y, phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p)
+	real, intent(in)  :: y(26)
 	real, intent(out) :: phi(2), phidot(2), H, N
-	real, intent(out) :: vbein_PT(2,2), Re_r1(2), Im_r1(2), Re_r2(2), Im_r2(2), Re_r1_p(2), Im_r1_p(2), Re_r2_p(2), Im_r2_p(2), theta1_p, theta2_p
+	real, intent(out) :: vbein_PT(2,2), Re_r1(2), Im_r1(2), Re_r2(2), Im_r2(2), Re_r1_p(2), Im_r1_p(2), Re_r2_p(2), Im_r2_p(2)
 	
 	phi      = y(1:2)                  ! $\varphi^{A}$
 	phidot   = y(3:4)                  ! $\dot{\varphi}^{A}$
@@ -73,8 +71,6 @@ subroutine unpack_state_perturbations(y, phi, phidot, H, N, vbein_PT, Re_r1, Im_
 	Im_r1_p  = y(21:22)                ! $\mathrm{Im} \, \mathbf{r}_{1}^{\prime}$
 	Re_r2_p  = y(23:24)                ! $\mathrm{Re} \, \mathbf{r}_{2}^{\prime}$
 	Im_r2_p  = y(25:26)                ! $\mathrm{Im} \, \mathbf{r}_{2}^{\prime}$
-	theta1_p = y(27)                   ! $\theta_{1}^{\prime}$
-	theta2_p = y(28)                   ! $\theta_{2}^{\prime}$
 	
 end subroutine unpack_state_perturbations
 
@@ -95,13 +91,13 @@ subroutine evalf_background(y, dydx)
 end subroutine evalf_background
 
 subroutine evalf_perturbations(y, dydx, k_mode)
-	real, dimension(28)  :: y, dydx
+	real, dimension(26)  :: y, dydx
 	real, dimension(2)   :: phi, phidot, phidotdot, Re_r1, Im_r1, Re_r2, Im_r2, Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p, Re_r1_pp, Im_r1_pp, Re_r2_pp, Im_r2_pp
 	real, dimension(2,2) :: vbein_PT, vbein_PT_dot, Gammaphidot, W2_ij, Id, W2_eff_r1, W2_eff_r2
 	real                 :: k_mode, H, N, theta1_p, theta2_p, theta1_pp, theta2_pp, r1_mod2, r2_mod2, r1_mod2_p, r2_mod2_p
 	
 	! Update functions
-	call unpack_state_perturbations(y, phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p, theta1_p, theta2_p)
+	call unpack_state_perturbations(y, phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p)
 	
 	! Calculate time-evolution functions
 	phidotdot    = phi_dot_dot(phi, phidot, H)                                               ! $\ddot{\phi}^{A}$
@@ -113,6 +109,8 @@ subroutine evalf_perturbations(y, dydx, k_mode)
 	r2_mod2      = dot_product(Re_r2, Re_r2) + dot_product(Im_r2, Im_r2)                     ! $r_{2}^{2}$
 	r1_mod2_p    = 2.0 * (dot_product(Re_r1_p, Re_r1) + dot_product(Im_r1_p, Im_r1))         ! $(r_{1}^{2})^{\prime}$
 	r2_mod2_p    = 2.0 * (dot_product(Re_r2_p, Re_r2) + dot_product(Im_r2_p, Im_r2))         ! $(r_{2}^{2})^{\prime}$
+	theta1_p     = 0.5 / r1_mod2                                                             ! $\theta_{1}^{\prime}$
+	theta2_p     = 0.5 / r2_mod2                                                             ! $\theta_{2}^{\prime}$
 	W2_eff_r1    = W2_ij - theta1_p**2 * Id                                                  ! $\mathbf{\Omega}^{2} - \theta_{1}^{\prime 2} \mathbf{I}$
 	W2_eff_r2    = W2_ij - theta2_p**2 * Id                                                  ! $\mathbf{\Omega}^{2} - \theta_{2}^{\prime 2} \mathbf{I}$
 	theta1_pp    = - (r1_mod2_p / r1_mod2) * theta1_p                                        ! $\theta_{1}^{\prime\prime}$
@@ -136,8 +134,6 @@ subroutine evalf_perturbations(y, dydx, k_mode)
 	dydx(21:22) = exp(-N) * Im_r1_pp
 	dydx(23:24) = exp(-N) * Re_r2_pp
 	dydx(25:26) = exp(-N) * Im_r2_pp
-	dydx(27)    = exp(-N) * theta1_pp
-	dydx(28)    = exp(-N) * theta2_pp
 	
 end subroutine evalf_perturbations
 
@@ -179,7 +175,7 @@ end subroutine gl8_background
 
 ! 8th order implicit Gauss-Legendre integrator
 subroutine gl8_perturbations(y, dt, k_mode)
-	integer, parameter  :: s = 4, n = 28
+	integer, parameter  :: s = 4, n = 26
 	real, intent(in)    :: dt, k_mode
 	real, intent(inout) :: y(n)
 	integer             :: i, j
@@ -245,7 +241,7 @@ pure function metric(phi) result(h_AB)
 			h_AB(1,1) = 1.0
 			h_AB(1,2) = 0.0
 			h_AB(2,1) = 0.0
-			h_AB(2,2) = amp_OWM * cos(frq_OWM * phi(1)) + 1.0
+			h_AB(2,2) = 1.0 + amp_OWM * cos(frq_OWM * phi(1))
 		case ("GBM")
 			h_AB(1,1) = 1.0
 			h_AB(1,2) = 0.0
@@ -378,7 +374,7 @@ end function Riemann
 pure function potential(phi) result(V)
 	real, intent(in) :: phi(2)
 	real             :: V
-	real             :: ds2, ds, cs, sn, ang
+	real             :: ds2, ds, sn, ang
 	
 	select case (potential_shape)
 		case ("ELP")
@@ -391,12 +387,13 @@ pure function potential(phi) result(V)
 			! Precompute factors
 			ds2 = phi(1)**2 + phi(2)**2
 			ds  = sqrt(ds2)
-			cs  = cos(f1_mvp * ds)
 			sn  = sin(f1_mvp * ds)
 			ang = atan2(phi(2), phi(1))
 			
 			! Final expression
 			V = lambda1_mvp**4 * cos(f2_mvp * ang - f3_mvp * sn) + 0.5 * m_mvp**2 * ds2
+		case ("DEP")
+			V = 0.5 * m1_DEP**2 * phi(1)**2 + 0.5 * m2_DEP**2 * (phi(2) - amp_DEP * cos(frq_DEP * phi(1)))**2
 	end select
 
 end function potential
@@ -428,6 +425,9 @@ pure function NablaV(phi) result(DV)
 			! Final expression
 			DV(1) = -lambda1_mvp**4 * (-f1_mvp * f3_mvp * phi(1) * cs / ds - f2_mvp * phi(2) / ds2) * sin(f2_mvp * ang - f3_mvp * sn) + m_mvp**2 * phi(1)
 			DV(2) = -lambda1_mvp**4 * (-f1_mvp * f3_mvp * phi(2) * cs / ds + f2_mvp * phi(1) / ds2) * sin(f2_mvp * ang - f3_mvp * sn) + m_mvp**2 * phi(2)
+		case ("DEP")
+			DV(1) = m1_DEP**2 * phi(1) + amp_DEP * frq_DEP * m2_DEP**2 * (phi(2) - amp_DEP * cos(frq_DEP * phi(1))) * sin(frq_DEP * phi(1))
+			DV(2) = m2_DEP**2 * (phi(2) - amp_DEP * cos(frq_DEP * phi(1)))
 	end select
 	
 end function NablaV
@@ -466,6 +466,10 @@ pure function HessianV(phi) result(D2V)
 			D2V(1,1) = -lambda1_mvp**4 * (f1_mvp * f3_mvp * phi(1) * cs / ds + f2_mvp * phi(2) / ds2)**2 * css - lambda1_mvp**4 * (f1_mvp**2 * f3_mvp * phi(1)**2 * sn / ds2 + f1_mvp * f3_mvp * phi(1)**2 * cs / ds3 - f1_mvp * f3_mvp * cs / ds + 2.0 * f2_mvp * phi(1) * phi(2) / ds2**2) * sns + m_mvp**2
 			D2V(1,2) = -lambda1_mvp**4 * ((f1_mvp * f3_mvp * phi(1) * cs / ds + f2_mvp * phi(2) / ds2) * (f1_mvp * f3_mvp * phi(2) * cs / ds - f2_mvp * phi(1) / ds2) * css + (f1_mvp**2 * f3_mvp * phi(1) * phi(2) * sn / ds2 + f1_mvp * f3_mvp * phi(1) * phi(2) * cs / ds3 + 2.0 * f2_mvp * phi(2)**2 / ds2**2 - f2_mvp / ds2) * sns)
 			D2V(2,2) = -lambda1_mvp**4 * (f1_mvp * f3_mvp * phi(2) * cs / ds - f2_mvp * phi(1) / ds2)**2 * css - lambda1_mvp**4 * (f1_mvp**2 * f3_mvp * phi(2)**2 * sn / ds2 + f1_mvp * f3_mvp * phi(2)**2 * cs / ds3 - f1_mvp * f3_mvp * cs / ds - 2.0 * f2_mvp * phi(1) * phi(2) / ds2**2) * sns + m_mvp**2
+		case ("DEP")
+			D2V(1,1) = (amp_DEP**2 * frq_DEP**2 * m2_DEP**2 * sin(frq_DEP * phi(1))**2 - amp_DEP * frq_DEP**2 * m2_DEP**2 * (amp_DEP * cos(frq_DEP * phi(1)) - phi(2)) * cos(frq_DEP * phi(1)) + m1_DEP**2)
+			D2V(1,2) = amp_DEP * frq_DEP * m2_DEP**2 * sin(frq_DEP * phi(1))
+			D2V(2,2) = m2_DEP**2
 	end select
 	
 	! Symmetry
