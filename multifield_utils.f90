@@ -224,28 +224,23 @@ pure function metric(phi) result(h_AB)
 	real             :: h_AB(2,2)
 	integer          :: i
 	
+	h_AB = 0.0
+	
 	select case (field_space_geometry)
 		case ("EUM")
-			h_AB = reshape([1.0, 0.0, 0.0, 1.0], [2,2])
+			h_AB(1,1) = 1.0
+			h_AB(2,2) = 1.0
 		case ("RPM")
 			h_AB(1,1) = 1.0 + 2.0 * phi(2)**2 / energyscale**2
-			h_AB(1,2) = 0.0
-			h_AB(2,1) = 0.0
 			h_AB(2,2) = 1.0
 		case ("AAM")
 			h_AB(1,1) = 1.0 / (1.0 - phi(1)**2 / (6.0 * alpha_aa))**2
-			h_AB(1,2) = 0.0
-			h_AB(2,1) = 0.0
 			h_AB(2,2) = 1.0 / (1.0 - phi(2)**2 / (6.0 * beta_aa))**2
 		case ("OWM")
 			h_AB(1,1) = 1.0
-			h_AB(1,2) = 0.0
-			h_AB(2,1) = 0.0
 			h_AB(2,2) = 1.0 + amp_OWM * cos(frq_OWM * phi(1))
 		case ("GBM")
 			h_AB(1,1) = 1.0
-			h_AB(1,2) = 0.0
-			h_AB(2,1) = 0.0
 			h_AB(2,2) = 1.0
 			do i = 1, n_GBM
 				if (abs(phi(1) - x_GBM(i)) <= spp_GBM * std_GBM(i)) then
@@ -262,28 +257,22 @@ pure function inv_metric(phi) result(hAB)
 	real             :: hAB(2,2)
 	integer          :: i
 	
+	hAB = 0.0
+	
 	select case (field_space_geometry)
 		case ("EUM")
 			hAB = reshape([1.0, 0.0, 0.0, 1.0], [2,2])
 		case ("RPM")
 			hAB(1,1) = 1.0 * energyscale**2 / (1.0 * energyscale**2 + 2.0 * phi(2)**2)
-			hAB(1,2) = 0.0
-			hAB(2,1) = 0.0
 			hAB(2,2) = 1.0
 		case ("AAM")
 			hAB(1,1) = (1.0 - phi(1)**2 / (6.0 * alpha_aa))**2
-			hAB(1,2) = 0.0
-			hAB(2,1) = 0.0
 			hAB(2,2) = (1.0 - phi(2)**2 / (6.0 * beta_aa))**2
 		case ("OWM")
 			hAB(1,1) = 1.0
-			hAB(1,2) = 0.0
-			hAB(2,1) = 0.0
 			hAB(2,2) = 1.0 / (amp_OWM * cos(frq_OWM * phi(1)) + 1.0)
 		case ("GBM")
 			hAB(1,1) = 1.0
-			hAB(1,2) = 0.0
-			hAB(2,1) = 0.0
 			hAB(2,2) = 1.0
 			do i = 1, n_GBM
 				if (abs(phi(1) - x_GBM(i)) <= spp_GBM * std_GBM(i)) then
