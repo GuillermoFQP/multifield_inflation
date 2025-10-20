@@ -13,8 +13,6 @@ program ps_full
 ! y(21:22) stores $\mathrm{Im} \, \mathbf{r}_{1}^{\prime}$
 ! y(23:24) stores $\mathrm{Re} \, \mathbf{r}_{2}^{\prime}$
 ! y(25:26) stores $\mathrm{Im} \, \mathbf{r}_{2}^{\prime}$
-! y(27)    stores $\theta_{1}^{\prime}$
-! y(28)    stores $\theta_{2}^{\prime}$
 
 use multifield_globals
 use multifield_utils
@@ -23,13 +21,12 @@ implicit none
 
 real, parameter              :: N_start = 2.5, N_stop = 100.0                    ! Lower and upper bounds for mode injection
 real, parameter              :: N_step = 0.10                                    ! E-fold interval between consecutive mode injections
-real, parameter              :: dt_back = 200.0, dt_pert = 30.0                  ! Time steps
+real, parameter              :: dt_back = 200.0, dt_pert = 20.0                  ! Time steps
 real, dimension(6)           :: y_back                                           ! Background state array
 real, dimension(28)          :: y_pert                                           ! Background + perturbation state array
 real, dimension(2)           :: phi, phidot                                      ! Field multiplet and its time derivative
 real, dimension(2)           :: Re_r1, Im_r1, Re_r2, Im_r2                       ! Complex amplitude vector
 real, dimension(2)           :: Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p               ! Time derivative of complex amplitude vector
-real                         :: theta1_p, theta2_p                               ! Time derivative of real phases
 integer, parameter           :: ngrid_max = int((N_stop - N_start) / N_step) + 1 ! E-fold interval between consecutive mode injections
 real, dimension(2,ngrid_max) :: phi_grid, phidot_grid                            ! Initial conditions for mode-injection
 real, dimension(ngrid_max)   :: H_grid, N_grid, PR_values, x_grid                ! Initial conditions for mode-injection
@@ -57,6 +54,8 @@ select case (potential_shape)
 	case ("HYP")
 		phi = [20.0, 20.0]
 	case ("MVP")
+		phi = [12.0, 12.0]
+	case ("DEP")
 		phi = [12.0, 12.0]
 end select
 
@@ -98,7 +97,7 @@ ngrid = i ! Number of grid points
 !========================================================================================================
 k_phys = 1.0d5 * H_end               ! Physical wave vector magnitude
 
-!$OMP PARALLEL DO PRIVATE(i, phi, phidot, H, N, slowroll, vbein_PT, k_mode, W2_ij, W_11, W_22, Re_r1, Re_r2, Im_r1, Im_r2, Re_r1_p, Re_r2_p, Im_r1_p, Im_r2_p, theta1_p, theta2_p, y_pert, N_trigger) SHARED(phi_grid, phidot_grid, H_grid, N_grid, k_phys, x_grid, PR_values) SCHEDULE(dynamic)
+!$OMP PARALLEL DO PRIVATE(i, phi, phidot, H, N, slowroll, vbein_PT, k_mode, W2_ij, W_11, W_22, Re_r1, Re_r2, Im_r1, Im_r2, Re_r1_p, Re_r2_p, Im_r1_p, Im_r2_p, y_pert, N_trigger) SHARED(phi_grid, phidot_grid, H_grid, N_grid, k_phys, x_grid, PR_values) SCHEDULE(dynamic)
 do i = 1, ngrid
 	! Background initial conditions
 	phi      = phi_grid(:,i)                   ! $\phi^{A}(t_{0})$
@@ -123,18 +122,16 @@ do i = 1, ngrid
 	Re_r2_p  = 0.0
 	Im_r1_p  = 0.0
 	Im_r2_p  = 0.0
-	theta1_p = W_11
-	theta2_p = W_22
 
 	! Initialize perturbation functions
-	call pack_state_perturbations(y_pert, phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p, theta1_p, theta2_p)
+	call pack_state_perturbations(y_pert, phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p)
 	
 	! Data writing trigger
 	N_trigger = N
 
 	do while (slowroll <= 1.0)
 		! Update functions of time
-		call unpack_state_perturbations(y_pert, phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p, theta1_p, theta2_p)
+		call unpack_state_perturbations(y_pert, phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p)
 		
 		! Update slow-roll parameter
 		slowroll = - Hubbledot(phi, phidot) / H**2

@@ -13,8 +13,6 @@ program ps_mode
 ! y(21:22) stores $\mathrm{Im} \, \mathbf{r}_{1}^{\prime}$
 ! y(23:24) stores $\mathrm{Re} \, \mathbf{r}_{2}^{\prime}$
 ! y(25:26) stores $\mathrm{Im} \, \mathbf{r}_{2}^{\prime}$
-! y(27)    stores $\theta_{1}^{\prime}$
-! y(28)    stores $\theta_{2}^{\prime}$
 
 use multifield_globals
 use multifield_utils
@@ -23,13 +21,12 @@ implicit none
 
 real, parameter      :: N_trigger = 2.5                             ! Mode trigger
 real, parameter      :: dt_back = 2000.0                            ! Background time step
-real, parameter      :: dt_pert = 30.0                              ! Perturbation time step (~0.1 for HYP and ~20.0 for NLP and ELP)
+real, parameter      :: dt_pert = 20.0                              ! Perturbation time step (~0.1 for HYP and ~20.0 for NLP and ELP)
 real, dimension(6)   :: y_back                                      ! Background state array
 real, dimension(28)  :: y_pert                                      ! Background + perturbation state array
 real, dimension(2)   :: phi, phidot                                 ! Field multiplet and its time derivative
 real, dimension(2)   :: Re_r1, Im_r1, Re_r2, Im_r2                  ! Complex amplitude vector
 real, dimension(2)   :: Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p          ! Time derivative of complex amplitude vector
-real                 :: theta1_p, theta2_p                          ! Time derivative of real phases
 real, dimension(2)   :: phi_0, phidot_0                             ! Initial conditions for mode-injection
 real                 :: H_0, N_0                                    ! Initial conditions for mode-injection
 real                 :: H, H_end, Hdot, N, slowroll, k_mode, k_phys ! Variables
@@ -56,7 +53,9 @@ select case (potential_shape)
 	case ("HYP")
 		phi = [20.0, 20.0]
 	case ("MVP")
-		phi = [8.0, 8.0]
+		phi = [12.0, 12.0]
+	case ("DEP")
+		phi = [12.0, 12.0]
 end select
 
 phidot = [0.0,  0.0]         ! $\dot{\phi}^{A}(t_{0})$
@@ -117,20 +116,18 @@ Re_r1_p  = 0.0
 Re_r2_p  = 0.0
 Im_r1_p  = 0.0
 Im_r2_p  = 0.0
-theta1_p = W_11
-theta2_p = W_22
 
 ! Initialize perturbation functions
-call pack_state_perturbations(y_pert, phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p, theta1_p, theta2_p)
+call pack_state_perturbations(y_pert, phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p)
 
 ! Data writing trigger
 N_flush = N
 
-do while (slowroll <= 1.0)
+!do while (slowroll <= 1.0)
 !do while (slowroll <= 1.0 .or. abs(abs(phi(2))-2.5) >= 1.0d-2 .or. abs(phi(1)) >= 1.0d-2)
-!do while (slowroll <= 1.0 .or. abs(phi(1)) >= 5.0d-1 .or. abs(phi(2)) >= 5.0d-1)
+do while (slowroll <= 1.0 .or. abs(phi(1)) >= 0.1)
 	! Update functions of time
-	call unpack_state_perturbations(y_pert, phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p, theta1_p, theta2_p)
+	call unpack_state_perturbations(y_pert, phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p)
 	
 	! Update slow-roll parameter
 	slowroll = - Hubbledot(phi, phidot) / H**2
