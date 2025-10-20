@@ -13,15 +13,13 @@ program omega_eff
 ! y(21:22) stores $\mathrm{Im} \, \mathbf{r}_{1}^{\prime}$
 ! y(23:24) stores $\mathrm{Re} \, \mathbf{r}_{2}^{\prime}$
 ! y(25:26) stores $\mathrm{Im} \, \mathbf{r}_{2}^{\prime}$
-! y(27)    stores $\theta_{1}^{\prime}$
-! y(28)    stores $\theta_{2}^{\prime}$
 
 use multifield_globals
 use multifield_utils
 
 implicit none
 
-real, parameter      :: N_trigger = 10.0                             ! Mode trigger
+real, parameter      :: N_trigger = 10.0                            ! Mode trigger
 real, parameter      :: dt_back = 20.0, dt_pert = 20.0              ! Time steps
 real, parameter      :: Id(2,2) = reshape([1.0, 0.0, 0.0, 1.0], [2,2])   ! Identity matrix
 real, dimension(6)   :: y_back                                      ! Background state array
@@ -57,6 +55,8 @@ select case (potential_shape)
 		phi = [20.0, 20.0]
 	case ("MVP")
 		phi = [8.0, 8.0]
+	case ("DEP")
+		phi = [12.0, 12.0]
 end select
 
 phidot = [0.0,  0.0]         ! $\dot{\phi}^{A}(t_{0})$
@@ -117,27 +117,27 @@ Re_r1_p  = 0.0
 Re_r2_p  = 0.0
 Im_r1_p  = 0.0
 Im_r2_p  = 0.0
-theta1_p = W_11
-theta2_p = W_22
 
 ! Initialize perturbation functions
-call pack_state_perturbations(y_pert, phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p, theta1_p, theta2_p)
+call pack_state_perturbations(y_pert, phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p)
 
 ! Data writing trigger
 N_flush = N
 
 do while (slowroll <= 1.0)
 	! Update functions of time
-	call unpack_state_perturbations(y_pert, phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p, theta1_p, theta2_p)
+	call unpack_state_perturbations(y_pert, phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p)
 	
 	! Update slow-roll parameter
 	slowroll = - Hubbledot(phi, phidot) / H**2
 	
 	if (N >= N_flush) then
-		r1_mod2  = dot_product(Re_r1, Re_r1) + dot_product(Im_r1, Im_r1)
-		r2_mod2  = dot_product(Re_r2, Re_r2) + dot_product(Im_r2, Im_r2)
 		a2       = exp(2.0 * N)
 		Hdot     = Hubbledot(phi, phidot)
+		r1_mod2  = dot_product(Re_r1, Re_r1) + dot_product(Im_r1, Im_r1)
+		r2_mod2  = dot_product(Re_r2, Re_r2) + dot_product(Im_r2, Im_r2)
+		theta1_p = 0.5 / r1_mod2
+		theta2_p = 0.5 / r2_mod2
 		W2_ij    = freq_matrix(phi, phidot, H, N, vbein_PT, k_mode)
 		W2_eff1  = W2_ij - Id * theta1_p**2
 		W2_eff2  = W2_ij - Id * theta2_p**2
