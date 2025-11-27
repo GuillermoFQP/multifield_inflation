@@ -628,28 +628,55 @@ pure function freq_matrix(phi, phidot, H, N, vbein_PT, k_mode) result(W2_ij)
 	
 end function freq_matrix
 
-! Calculate the power spectrum
-pure function powerspectrum(phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, k_mode) result(PR)
+! Calculate the adiabatic (curvature) power spectrum
+pure function powerspectrum_ad(phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, k_mode) result(PR)
 	real, intent(in) :: phi(2), phidot(2), H, N, vbein_PT(2,2), Re_r1(2), Im_r1(2), Re_r2(2), Im_r2(2), k_mode
-	real             :: phidotphidot(2,2), h_AB(2,2), phidot_mag2, C1, C2, HA(2,2), UU(2,2), HAUUAH(2,2), PR, a
+	real             :: phidotphidot(2,2), h_AB(2,2), phidot_mag2, C1, C2, HA(2,2), UU(2,2), HAUUAH(2,2), PR, a2, e(2,2), ee(2,2)
 	
 	! Field-field correlator (modulo $\delta^{3}(\mathbf{k}+\mathbf{k}^{\prime})$)
 	UU = outer_product(Re_r1, Re_r1) + outer_product(Re_r2, Re_r2) + outer_product(Im_r1, Im_r1) + outer_product(Im_r2, Im_r2)
 	
 	! $\langle \mathcal{R}(\mathbf{k},t) \mathcal{R}(\mathbf{k}^{\prime},t) \rangle$
-	a            = exp(N)
+	a2           = exp(2.0 * N)
 	h_AB         = metric(phi)                           ! $h_{AB}$
 	phidotphidot = outer_product(phidot, phidot)         ! $\dot{\varphi}^{A} \dot{\varphi}^{B}$
 	phidot_mag2  = sum(h_AB * phidotphidot)              ! $|\dot{\varphi}|^{2} = h_{AB} \dot{\varphi}^{A} \dot{\varphi}^{B}$
 	HA           = matmul(h_AB, vbein_PT)                ! $\mathbf{H \Lambda}$
 	HAUUAH       = matmul(matmul(HA, UU), transpose(HA)) ! $(\mathbf{H \Lambda L}) (\mathbf{H \Lambda L})^{\intercal}$
 	C1           = k_mode**3 / (2.0 * pi**2)             ! $\frac{k^{3}}{2 \pi^{2}}$
-	C2           = H / (a * phidot_mag2)                 ! $\frac{H}{a |\dot{\varphi}|^{2}}$
+	C2           = H**2 / (a2 * phidot_mag2)             ! $\frac{H}{a |\dot{\varphi}|^{2}}$
+	e            = vielbein_ad_is(phi, phidot)           ! $e^{A}_{i}$
+	ee           = outer_product(e(:,1), e(:,1))         ! $e^{A}_{\sigma} e^{B}_{\sigma}$
 	
 	! $\mathcal{P}_{\mathcal{R}} (k) = \frac{k^{3}}{2\pi^{2}} \left( \frac{H}{a |\dot{\varphi}|} \right)^{2} \mathbf{e}_{\sigma}^{\intercal} [(\mathbf{H \Lambda L}) (\mathbf{H \Lambda L})^{\intercal}] \mathbf{e}_{\sigma}$
-	PR = C1 * C2**2 * sum(HAUUAH * phidotphidot)
+	PR = C1 * C2 * sum(HAUUAH * ee)
 
-end function powerspectrum
+end function powerspectrum_ad
+
+! Calculate the entropy (isocurvature) power spectrum
+pure function powerspectrum_is(phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, k_mode) result(PR)
+	real, intent(in) :: phi(2), phidot(2), H, N, vbein_PT(2,2), Re_r1(2), Im_r1(2), Re_r2(2), Im_r2(2), k_mode
+	real             :: phidotphidot(2,2), h_AB(2,2), phidot_mag2, C1, C2, HA(2,2), UU(2,2), HAUUAH(2,2), PR, a2, e(2,2), ee(2,2)
+	
+	! Field-field correlator (modulo $\delta^{3}(\mathbf{k}+\mathbf{k}^{\prime})$)
+	UU = outer_product(Re_r1, Re_r1) + outer_product(Re_r2, Re_r2) + outer_product(Im_r1, Im_r1) + outer_product(Im_r2, Im_r2)
+	
+	! $\langle \mathcal{R}(\mathbf{k},t) \mathcal{R}(\mathbf{k}^{\prime},t) \rangle$
+	a2           = exp(2.0 * N)
+	h_AB         = metric(phi)                           ! $h_{AB}$
+	phidotphidot = outer_product(phidot, phidot)         ! $\dot{\varphi}^{A} \dot{\varphi}^{B}$
+	phidot_mag2  = sum(h_AB * phidotphidot)              ! $|\dot{\varphi}|^{2} = h_{AB} \dot{\varphi}^{A} \dot{\varphi}^{B}$
+	HA           = matmul(h_AB, vbein_PT)                ! $\mathbf{H \Lambda}$
+	HAUUAH       = matmul(matmul(HA, UU), transpose(HA)) ! $(\mathbf{H \Lambda L}) (\mathbf{H \Lambda L})^{\intercal}$
+	C1           = k_mode**3 / (2.0 * pi**2)             ! $\frac{k^{3}}{2 \pi^{2}}$
+	C2           = H**2 / (a2 * phidot_mag2)             ! $\frac{H}{a |\dot{\varphi}|^{2}}$
+	e            = vielbein_ad_is(phi, phidot)           ! $e^{A}_{i}$
+	ee           = outer_product(e(:,2), e(:,2))         ! $e^{A}_{s} e^{B}_{s}$
+	
+	! $\mathcal{P}_{\mathcal{R}} (k) = \frac{k^{3}}{2\pi^{2}} \left( \frac{H}{a |\dot{\varphi}|} \right)^{2} \mathbf{e}_{\sigma}^{\intercal} [(\mathbf{H \Lambda L}) (\mathbf{H \Lambda L})^{\intercal}] \mathbf{e}_{\sigma}$
+	PR = C1 * C2 * sum(HAUUAH * ee)
+
+end function powerspectrum_is
 
 ! Symmetrizer operator for a 2x2 real matrix
 pure function Sym(A) result(SymA)
