@@ -29,7 +29,7 @@ real, dimension(2)           :: Re_r1, Im_r1, Re_r2, Im_r2                      
 real, dimension(2)           :: Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p               ! Time derivative of complex amplitude vector
 integer, parameter           :: ngrid_max = int((N_stop - N_start) / N_step) + 1 ! E-fold interval between consecutive mode injections
 real, dimension(2,ngrid_max) :: phi_grid, phidot_grid                            ! Initial conditions for mode-injection
-real, dimension(ngrid_max)   :: H_grid, N_grid, PR_values, x_grid                ! Initial conditions for mode-injection
+real, dimension(ngrid_max)   :: H_grid, N_grid, PR_ad, PR_is, x_grid             ! Initial conditions for mode-injection
 real, dimension(2,2)         :: phidotphidot, vbein_PT, W2_ij                    ! Variables
 real                         :: H, H_end, Hdot, N, slowroll, k_mode, k_phys      ! Variables
 real                         :: N_trigger, W_11, W_22                            ! Variables
@@ -97,7 +97,7 @@ ngrid = i ! Number of grid points
 !========================================================================================================
 k_phys = 1.0d5 * H_end               ! Physical wave vector magnitude
 
-!$OMP PARALLEL DO PRIVATE(i, phi, phidot, H, N, slowroll, vbein_PT, k_mode, W2_ij, W_11, W_22, Re_r1, Re_r2, Im_r1, Im_r2, Re_r1_p, Re_r2_p, Im_r1_p, Im_r2_p, y_pert, N_trigger) SHARED(phi_grid, phidot_grid, H_grid, N_grid, k_phys, x_grid, PR_values) SCHEDULE(dynamic)
+!$OMP PARALLEL DO PRIVATE(i, phi, phidot, H, N, slowroll, vbein_PT, k_mode, W2_ij, W_11, W_22, Re_r1, Re_r2, Im_r1, Im_r2, Re_r1_p, Re_r2_p, Im_r1_p, Im_r2_p, y_pert, N_trigger) SHARED(phi_grid, phidot_grid, H_grid, N_grid, k_phys, x_grid, PR_ad, PR_is) SCHEDULE(dynamic)
 do i = 1, ngrid
 	! Background initial conditions
 	phi      = phi_grid(:,i)                   ! $\phi^{A}(t_{0})$
@@ -139,13 +139,14 @@ do i = 1, ngrid
 		call gl8_perturbations(y_pert, dt_pert, k_mode)
 	end do
 	
-	x_grid(i)    = log(k_mode/(exp(N)*H))
-	PR_values(i) = powerspectrum(phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, k_mode)
+	x_grid(i) = log(k_mode/(exp(N)*H))
+	PR_ad(i)  = powerspectrum_ad(phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, k_mode)
+	PR_is(i)  = powerspectrum_is(phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, k_mode)
 end do
 !$OMP END PARALLEL DO
 
 do i = 1, ngrid
-	write (*,'(7(6e25.10e3))') x_grid(i), PR_values(i)
+	write (*,'(7(6e25.10e3))') x_grid(i), PR_ad(i), PR_is(i)
 end do
 
 end program ps_full

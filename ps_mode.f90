@@ -133,7 +133,7 @@ do while (slowroll <= 1.0 .or. abs(phi(1)) >= 0.1)
 	slowroll = - Hubbledot(phi, phidot) / H**2
 	
 	if (N >= N_flush) then
-		write (*,'(7(6e25.10e3))') N, powerspectrum(phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, k_mode)
+		write (*,'(7(6e25.10e3))') N, powerspectrum_ad(phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, k_mode), powerspectrum_is(phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, k_mode)
 		N_flush = N_flush + 0.01
 	end if
 	
