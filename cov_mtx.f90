@@ -1,4 +1,4 @@
-program ps_mode
+program cov_mtx
 ! Solves the set of coupled background and perturbation equations for an inflation model with two scalar fields with a non-trivial field space metric and calculates the curvature power spectrum of the perturbation fields $\mathcal{P}_{\mathcal{R}}$ as a function of $N$. This script evolves 28 functions of time stored in the entries of the array y(1:28).
 ! y(1:2)   stores $\phi^{A}$
 ! y(3:4)   stores $\dot{\phi}^{1}$
@@ -19,21 +19,29 @@ use multifield_utils
 
 implicit none
 
-real, parameter      :: N_trigger = 2.5                             ! Mode trigger
-real, parameter      :: dt_back = 200.0                             ! Background time step
-real, parameter      :: dt_pert = 20.0                              ! Perturbation time step (~0.1 for HYP and ~20.0 for NLP and ELP)
-real, dimension(6)   :: y_back                                      ! Background state array
-real, dimension(28)  :: y_pert                                      ! Background + perturbation state array
-real, dimension(2)   :: phi, phidot                                 ! Field multiplet and its time derivative
-real, dimension(2)   :: Re_r1, Im_r1, Re_r2, Im_r2                  ! Complex amplitude vector
-real, dimension(2)   :: Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p          ! Time derivative of complex amplitude vector
-real, dimension(2)   :: phi_0, phidot_0                             ! Initial conditions for mode-injection
-real                 :: H_0, N_0                                    ! Initial conditions for mode-injection
-real                 :: H, H_end, Hdot, N, slowroll, k_mode, k_phys ! Variables
-real, dimension(2,2) :: phidotphidot, vbein_PT, W2_ij               ! Variables
-real                 :: W_11, W_22, N_flush                         ! Variables
-logical              :: trigger, condition                          ! Mode trigger and loop condition
-character(len=32)    :: arg                                         ! Command-line argument
+real, parameter        :: N_trigger = 5.0                    ! Mode trigger
+real, parameter        :: dt_back = 200.0                    ! Background time step
+real, parameter        :: dt_pert = 20.0                     ! Perturbation time step (~0.1 for HYP and ~20.0 for NLP and ELP)
+real, dimension(6)     :: y_back                             ! Background state array
+real, dimension(28)    :: y_pert                             ! Background + perturbation state array
+real, dimension(2)     :: phi, phidot                        ! Field multiplet and its time derivative
+real, dimension(2)     :: Re_r1, Im_r1, Re_r2, Im_r2         ! Complex amplitude vector
+real, dimension(2)     :: Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p ! Time derivative of complex amplitude vector
+real, dimension(2)     :: phi_0, phidot_0                    ! Initial conditions for mode-injection
+real                   :: H_0, N_0                           ! Initial conditions for mode-injection
+real                   :: H, H_end, Hdot, N, N_end, slowroll ! Variables
+real                   :: k_mode, k_phys                     ! Variables
+real, dimension(2,2)   :: phidotphidot, vbein_PT, W2_ij      ! Variables
+real, dimension(2,2,6) :: eigvec                             ! Variables
+real, dimension(2,2,6) :: submtx                             ! Variables
+real, dimension(2,6)   :: eigval                             ! Variables
+real, dimension(4)     :: eigvalSigma, var                   ! Variables
+real                   :: W_11, W_22, N_flush                ! Variables
+real, dimension(4,4)   :: Sigma, eigvecSigma                 ! Covariance matrix $\mathrm{\Sigma}$
+real                   :: det_Sigma                          ! Determinant of covariance matrix
+logical                :: trigger, condition                 ! Mode trigger and loop condition
+integer                :: i                                  ! Counter
+character(len=32)      :: arg                                ! Command-line argument
 
 ! Parse argument
 if (field_space_geometry == "RPM") then
@@ -89,6 +97,7 @@ do while (condition)
 	if (slowroll >= 1.0 .and. convergence(y_back(6), N)) condition = .false.
 end do
 
+N_end = N ! E-fold number at the end of inflation
 H_end = H ! Hubble parameter at $\epsilon = 1$
 
 !========================================================================================================
@@ -133,15 +142,38 @@ do while (condition)
 	! Update slow-roll parameter
 	slowroll = - Hubbledot(phi, phidot) / H**2
 	
+	! Calculate covariance matrix
+	Sigma = covmtx(Re_r1, Im_r1, Re_r2, Im_r2, Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p)
+	
+	! Variances
+	var(1) = k_mode * Sigma(1,1)
+	var(2) = k_mode * Sigma(2,2)
+	var(3) = Sigma(3,3) / k_mode
+	var(4) = Sigma(4,4) / k_mode
+	
+	! Projections of the covariance matrix
+	submtx(:,:,1) = reshape([k_mode * Sigma(1,1), k_mode * Sigma(2,1), k_mode * Sigma(1,2), k_mode * Sigma(2,2)], [2,2]) ! $k^{1/2} v_{\rm S}^{1}$ vs $k^{1/2} v_{\rm S}^{2}$
+	submtx(:,:,2) = reshape([k_mode * Sigma(1,1), Sigma(3,1), Sigma(1,3), Sigma(3,3) / k_mode], [2,2])                   ! $k^{1/2} v_{\rm S}^{1}$ vs $k^{-1/2} \pi_{\rm S}^{1}$
+	submtx(:,:,3) = reshape([k_mode * Sigma(2,2), Sigma(3,2), Sigma(2,3), Sigma(3,3) / k_mode], [2,2])                   ! $k^{1/2} v_{\rm S}^{2}$ vs $k^{-1/2} \pi_{\rm S}^{1}$
+	submtx(:,:,4) = reshape([k_mode * Sigma(1,1), Sigma(4,1), Sigma(1,4), Sigma(4,4) / k_mode], [2,2])                   ! $k^{1/2} v_{\rm S}^{1}$ vs $k^{-1/2} \pi_{\rm S}^{2}$
+	submtx(:,:,5) = reshape([k_mode * Sigma(2,2), Sigma(4,2), Sigma(2,4), Sigma(4,4) / k_mode], [2,2])                   ! $k^{1/2} v_{\rm S}^{2}$ vs $k^{-1/2} \pi_{\rm S}^{2}$
+	submtx(:,:,6) = reshape([Sigma(3,3) / k_mode, Sigma(4,3) / k_mode, Sigma(3,4) / k_mode, Sigma(4,4) / k_mode], [2,2]) ! $k^{-1/2} \pi_{\rm S}^{1}$ vs $k^{-1/2} \pi_{\rm S}^{2}$
+	
+	! Calculate
+	do i = 1, 6
+		call eig2x2_sym(submtx(:,:,i), eigval(:,i), eigvec(:,:,i))
+	end do
+!	call eig4x4_sym(Sigma, eigvalSigma, eigvecSigma)
+	
 	if (N >= N_flush) then
-		write (*,'(7(6e25.10e3))') N, powerspectrum(phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, k_mode)
+		write (*,'(41(6e25.10e3))') N, var, ( eigval(:,i), eigvec(:,:,i), i = 1, 6 ), 
 		N_flush = N_flush + 0.01
 	end if
 	
 	call gl8_perturbations(y_pert, dt_pert, k_mode)
 	
 	! Update condition
-	if (slowroll >= 1.0 .and. convergence(y_pert(6), N)) condition = .false.
+	if (N > N_end) condition = .false.
 end do
 
-end program ps_mode
+end program cov_mtx

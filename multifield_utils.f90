@@ -218,6 +218,20 @@ pure function det(matrix) result(det_matrix)
 
 end function det
 
+pure function inv(A) result(Ainv)
+	real, intent(in) :: A(2,2)
+	real             :: Ainv(2,2)
+	real             :: d
+
+	d = det(A)
+
+	Ainv(1,1) =   A(2,2) / d
+	Ainv(1,2) = - A(1,2) / d
+	Ainv(2,1) = - A(2,1) / d
+	Ainv(2,2) =   A(1,1) / d
+
+end function inv
+
 ! Field space metric $h_{AB}$
 pure function metric(phi) result(h_AB)
 	real, intent(in) :: phi(2)
@@ -247,6 +261,9 @@ pure function metric(phi) result(h_AB)
 					h_AB(2,2) = 1.0 + amp_GBM(i) * exp(-0.5 * (phi(1) - x_GBM(i))**2 / std_GBM(i)**2)
 				end if
 			end do
+		case ("WNM")
+			h_AB(1,1) = 1.0
+			h_AB(2,2) = amp_WNM*(a_WNM**4*cos(b_WNM**4*c_WNM*(d_WNM + phi(1))) + a_WNM**3*cos(b_WNM**3*c_WNM*(d_WNM + phi(1))) + a_WNM**2*cos(b_WNM**2*c_WNM*(d_WNM + phi(1))) + a_WNM*cos(b_WNM*c_WNM*(d_WNM + phi(1))) + cos(c_WNM*(d_WNM + phi(1)))) + dsp_WNM
 	end select
 
 end function metric
@@ -279,6 +296,9 @@ pure function inv_metric(phi) result(hAB)
 					hAB(2,2) = 1.0 / (amp_GBM(i) * exp(-0.5 * (phi(1) - x_GBM(i))**2 / std_GBM(i)**2) + 1.0)
 				end if
 			end do
+		case ("WNM")
+			hAB(1,1) = 1.0
+			hAB(2,2) = 1.0/(a_WNM**4*amp_WNM*cos(b_WNM**4*c_WNM*(d_WNM + phi(1))) + a_WNM**3*amp_WNM*cos(b_WNM**3*c_WNM*(d_WNM + phi(1))) + a_WNM**2*amp_WNM*cos(b_WNM**2*c_WNM*(d_WNM + phi(1))) + a_WNM*amp_WNM*cos(b_WNM*c_WNM*(d_WNM + phi(1))) + amp_WNM*cos(c_WNM*(d_WNM + phi(1))) + dsp_WNM)
 	end select
 
 end function inv_metric
@@ -318,6 +338,11 @@ pure function Christoffel(phi) result(Gamma)
 					Gamma(2,2,1) = Gamma(2,1,2)
 				end if
 			end do
+		case ("WNM")
+			Gamma(1,2,2) = 0.5d0*amp_WNM*c_WNM*(a_WNM**4*b_WNM**4*sin(b_WNM**4*c_WNM*(d_WNM + phi(1))) + a_WNM**3*b_WNM**3*sin(b_WNM**3*c_WNM*(d_WNM + phi(1))) + a_WNM**2*b_WNM**2*sin(b_WNM**2*c_WNM*(d_WNM + phi(1))) + a_WNM*b_WNM*sin(b_WNM*c_WNM*(d_WNM + phi(1))) + sin(c_WNM*(d_WNM + phi(1))))
+			Gamma(2,1,1) = 0
+			Gamma(2,1,2) = -amp_WNM*c_WNM*(a_WNM**4*b_WNM**4*sin(b_WNM**4*c_WNM*(d_WNM + phi(1))) + a_WNM**3*b_WNM**3*sin(b_WNM**3*c_WNM*(d_WNM + phi(1))) + a_WNM**2 *b_WNM**2*sin(b_WNM**2*c_WNM*(d_WNM + phi(1))) + a_WNM*b_WNM*sin(b_WNM*c_WNM*(d_WNM + phi(1))) + sin(c_WNM*(d_WNM + phi(1))))/(2*a_WNM**4*amp_WNM*cos(b_WNM**4*c_WNM*(d_WNM + phi(1))) + 2*a_WNM**3 * amp_WNM*cos(b_WNM**3*c_WNM*(d_WNM + phi(1))) + 2*a_WNM**2*amp_WNM*cos(b_WNM**2*c_WNM*(d_WNM + phi(1))) + 2*a_WNM*amp_WNM*cos(b_WNM*c_WNM*(d_WNM + phi(1))) + 2*amp_WNM*cos(c_WNM*(d_WNM + phi(1))) + 2*dsp_WNM)
+			Gamma(2,2,1) = Gamma(2,1,2)
 	end select
 	
 end function Christoffel
@@ -350,6 +375,24 @@ pure function Riemann(phi) result(R)
 					R(1,2,1,2) = amp_GBM(i) * (0.25 * amp_GBM(i) * dx2 * gbmp**2 + 0.5 * sd2 * (amp_GBM(i) * gbmp + 1.0) * gbmp - 0.5 * dx2 * (amp_GBM(i) * gbmp + 1.0) * gbmp) / (sd2**2 * (amp_GBM(i) * gbmp + 1.0))
 				end if
 			end do
+		case ("WNM")
+			R(1,2,1,2) = 1.0d0*amp_WNM*c_WNM**2*(0.25d0*amp_WNM*(a_WNM**4*b_WNM**4*sin(b_WNM**4* &
+c_WNM*(d_WNM + phi(1))) + a_WNM**3*b_WNM**3*sin(b_WNM**3*c_WNM*( &
+d_WNM + phi(1))) + a_WNM**2*b_WNM**2*sin(b_WNM**2*c_WNM*(d_WNM + &
+phi(1))) + a_WNM*b_WNM*sin(b_WNM*c_WNM*(d_WNM + phi(1))) + sin( &
+c_WNM*(d_WNM + phi(1))))**2 + 0.5d0*(a_WNM**4*b_WNM**8*cos(b_WNM &
+**4*c_WNM*(d_WNM + phi(1))) + a_WNM**3*b_WNM**6*cos(b_WNM**3* &
+c_WNM*(d_WNM + phi(1))) + a_WNM**2*b_WNM**4*cos(b_WNM**2*c_WNM*( &
+d_WNM + phi(1))) + a_WNM*b_WNM**2*cos(b_WNM*c_WNM*(d_WNM + phi(1 &
+))) + cos(c_WNM*(d_WNM + phi(1))))*(a_WNM**4*amp_WNM*cos(b_WNM**4 &
+*c_WNM*(d_WNM + phi(1))) + a_WNM**3*amp_WNM*cos(b_WNM**3*c_WNM*( &
+d_WNM + phi(1))) + a_WNM**2*amp_WNM*cos(b_WNM**2*c_WNM*(d_WNM + &
+phi(1))) + a_WNM*amp_WNM*cos(b_WNM*c_WNM*(d_WNM + phi(1))) + &
+amp_WNM*cos(c_WNM*(d_WNM + phi(1))) + dsp_WNM))/(a_WNM**4*amp_WNM &
+*cos(b_WNM**4*c_WNM*(d_WNM + phi(1))) + a_WNM**3*amp_WNM*cos( &
+b_WNM**3*c_WNM*(d_WNM + phi(1))) + a_WNM**2*amp_WNM*cos(b_WNM**2* &
+c_WNM*(d_WNM + phi(1))) + a_WNM*amp_WNM*cos(b_WNM*c_WNM*(d_WNM + &
+phi(1))) + amp_WNM*cos(c_WNM*(d_WNM + phi(1))) + dsp_WNM)
 	end select
 	
 	! Symmetries
@@ -380,14 +423,14 @@ pure function potential(phi) result(V)
 			ang = atan2(phi(2), phi(1))
 			
 			! Final expression
-			V = lambda1_mvp**4 * cos(f2_mvp * ang - f3_mvp * sn) + 0.5 * m_mvp**2 * ds2
+			V = lambda1_mvp**4 * ( cos(f2_mvp * ang - f3_mvp * sn) + 1.0) + 0.5 * m_mvp**2 * ds2
 		case ("DEP")
 			V = 0.5 * m1_DEP**2 * phi(1)**2 + 0.5 * m2_DEP**2 * (phi(2) - amp_DEP * cos(frq_DEP * phi(1)))**2
 	end select
 
 end function potential
 
-! Gradient of  the potential in the field space $\mathcal{D}_{A} V$
+! Gradient of the potential in the field space $\mathcal{D}_{A} V$
 pure function NablaV(phi) result(DV)
 	real, intent(in) :: phi(2)
 	real             :: DV(2)
@@ -629,54 +672,71 @@ pure function freq_matrix(phi, phidot, H, N, vbein_PT, k_mode) result(W2_ij)
 end function freq_matrix
 
 ! Calculate the adiabatic (curvature) power spectrum
-pure function powerspectrum_ad(phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, k_mode) result(PR)
+pure function powerspectrum(phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, k_mode) result(PS)
 	real, intent(in) :: phi(2), phidot(2), H, N, vbein_PT(2,2), Re_r1(2), Im_r1(2), Re_r2(2), Im_r2(2), k_mode
-	real             :: phidotphidot(2,2), h_AB(2,2), phidot_mag2, C1, C2, HA(2,2), UU(2,2), HAUUAH(2,2), PR, a2, e(2,2), ee(2,2)
+	real             :: phidotphidot(2,2), h_AB(2,2), phidot_mag2, C1, C2, HA(2,2), UU(2,2), HAUUAH(2,2), a2, e(2,2), PS(2,2)
+	integer          :: i, j
 	
 	! Field-field correlator (modulo $\delta^{3}(\mathbf{k}+\mathbf{k}^{\prime})$)
-	UU = outer_product(Re_r1, Re_r1) + outer_product(Re_r2, Re_r2) + outer_product(Im_r1, Im_r1) + outer_product(Im_r2, Im_r2)
+	UU = outer_product(Re_r1, Re_r1) + outer_product(Im_r1, Im_r1) + outer_product(Re_r2, Re_r2) + outer_product(Im_r2, Im_r2)
 	
 	! $\langle \mathcal{R}(\mathbf{k},t) \mathcal{R}(\mathbf{k}^{\prime},t) \rangle$
 	a2           = exp(2.0 * N)
-	h_AB         = metric(phi)                           ! $h_{AB}$
-	phidotphidot = outer_product(phidot, phidot)         ! $\dot{\varphi}^{A} \dot{\varphi}^{B}$
-	phidot_mag2  = sum(h_AB * phidotphidot)              ! $|\dot{\varphi}|^{2} = h_{AB} \dot{\varphi}^{A} \dot{\varphi}^{B}$
-	HA           = matmul(h_AB, vbein_PT)                ! $\mathbf{H \Lambda}$
-	HAUUAH       = matmul(matmul(HA, UU), transpose(HA)) ! $(\mathbf{H \Lambda L}) (\mathbf{H \Lambda L})^{\intercal}$
-	C1           = k_mode**3 / (2.0 * pi**2)             ! $\frac{k^{3}}{2 \pi^{2}}$
-	C2           = H**2 / (a2 * phidot_mag2)             ! $\frac{H}{a |\dot{\varphi}|^{2}}$
-	e            = vielbein_ad_is(phi, phidot)           ! $e^{A}_{i}$
-	ee           = outer_product(e(:,1), e(:,1))         ! $e^{A}_{\sigma} e^{B}_{\sigma}$
-	
-	! $\mathcal{P}_{\mathcal{R}} (k) = \frac{k^{3}}{2\pi^{2}} \left( \frac{H}{a |\dot{\varphi}|} \right)^{2} \mathbf{e}_{\sigma}^{\intercal} [(\mathbf{H \Lambda L}) (\mathbf{H \Lambda L})^{\intercal}] \mathbf{e}_{\sigma}$
-	PR = C1 * C2 * sum(HAUUAH * ee)
+	h_AB         = metric(phi)                                       ! $h_{AB}$
+	phidotphidot = outer_product(phidot, phidot)                     ! $\dot{\varphi}^{A} \dot{\varphi}^{B}$
+	phidot_mag2  = sum(h_AB * phidotphidot)                          ! $|\dot{\varphi}|^{2} = h_{AB} \dot{\varphi}^{A} \dot{\varphi}^{B}$
+	HA           = matmul(h_AB, vbein_PT)                            ! $\mathbf{H \Lambda}$
+	HAUUAH       = matmul(matmul(HA, UU), transpose(HA))             ! $(\mathbf{H \Lambda L}) (\mathbf{H \Lambda L})^{\intercal}$
+	C1           = k_mode**3 / (2.0 * pi**2)                         ! $\frac{k^{3}}{2 \pi^{2}}$
+	C2           = H**2 / (a2 * phidot_mag2)                         ! $\frac{H^{2}}{a^{2} |\dot{\varphi}|^{2}}$
+	e            = vielbein_ad_is(phi, phidot)                       ! $e^{A}_{i}$
+	PS           = C1 * C2 * matmul(transpose(e), matmul(HAUUAH, e)) ! $\mathcal{P}_{\mathcal{R}} (k)$
 
-end function powerspectrum_ad
+end function powerspectrum
 
-! Calculate the entropy (isocurvature) power spectrum
-pure function powerspectrum_is(phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, k_mode) result(PR)
-	real, intent(in) :: phi(2), phidot(2), H, N, vbein_PT(2,2), Re_r1(2), Im_r1(2), Re_r2(2), Im_r2(2), k_mode
-	real             :: phidotphidot(2,2), h_AB(2,2), phidot_mag2, C1, C2, HA(2,2), UU(2,2), HAUUAH(2,2), PR, a2, e(2,2), ee(2,2)
+! Calculate the covariance matrix
+pure function covmtx(Re_r1, Im_r1, Re_r2, Im_r2, Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p) result(Sigma)
+	real, intent(in) :: Re_r1(2), Im_r1(2), Re_r2(2), Im_r2(2), Re_r1_p(2), Im_r1_p(2), Re_r2_p(2), Im_r2_p(2)
+	real             :: r1_mod2, r2_mod2, theta1_p, theta2_p, VV(2,2), VP(2,2), PV(2,2), PP(2,2), Sigma(4,4)
 	
-	! Field-field correlator (modulo $\delta^{3}(\mathbf{k}+\mathbf{k}^{\prime})$)
-	UU = outer_product(Re_r1, Re_r1) + outer_product(Re_r2, Re_r2) + outer_product(Im_r1, Im_r1) + outer_product(Im_r2, Im_r2)
+	r1_mod2  = dot_product(Re_r1, Re_r1) + dot_product(Im_r1, Im_r1) ! $r_{1}^{2}$
+	r2_mod2  = dot_product(Re_r2, Re_r2) + dot_product(Im_r2, Im_r2) ! $r_{2}^{2}$
+	theta1_p = 0.5 / r1_mod2                                         ! $\theta_{1}^{\prime}$
+	theta2_p = 0.5 / r2_mod2                                         ! $\theta_{2}^{\prime}$
 	
-	! $\langle \mathcal{R}(\mathbf{k},t) \mathcal{R}(\mathbf{k}^{\prime},t) \rangle$
-	a2           = exp(2.0 * N)
-	h_AB         = metric(phi)                           ! $h_{AB}$
-	phidotphidot = outer_product(phidot, phidot)         ! $\dot{\varphi}^{A} \dot{\varphi}^{B}$
-	phidot_mag2  = sum(h_AB * phidotphidot)              ! $|\dot{\varphi}|^{2} = h_{AB} \dot{\varphi}^{A} \dot{\varphi}^{B}$
-	HA           = matmul(h_AB, vbein_PT)                ! $\mathbf{H \Lambda}$
-	HAUUAH       = matmul(matmul(HA, UU), transpose(HA)) ! $(\mathbf{H \Lambda L}) (\mathbf{H \Lambda L})^{\intercal}$
-	C1           = k_mode**3 / (2.0 * pi**2)             ! $\frac{k^{3}}{2 \pi^{2}}$
-	C2           = H**2 / (a2 * phidot_mag2)             ! $\frac{H}{a |\dot{\varphi}|^{2}}$
-	e            = vielbein_ad_is(phi, phidot)           ! $e^{A}_{i}$
-	ee           = outer_product(e(:,2), e(:,2))         ! $e^{A}_{s} e^{B}_{s}$
+	! $\mathbf{\Sigma}_{vv}$
+	VV = 2.0 * ( outer_product(Re_r1, Re_r1) + outer_product(Re_r2, Re_r2) + outer_product(Im_r1, Im_r1) + outer_product(Im_r2, Im_r2) )
 	
-	! $\mathcal{P}_{\mathcal{R}} (k) = \frac{k^{3}}{2\pi^{2}} \left( \frac{H}{a |\dot{\varphi}|} \right)^{2} \mathbf{e}_{\sigma}^{\intercal} [(\mathbf{H \Lambda L}) (\mathbf{H \Lambda L})^{\intercal}] \mathbf{e}_{\sigma}$
-	PR = C1 * C2 * sum(HAUUAH * ee)
+	! $\mathbf{\Sigma}_{v \pi}$
+	VP = 2.0 * ( outer_product(Re_r1, Re_r1_p) + outer_product(Im_r1, Im_r1_p) + outer_product(Re_r2, Re_r2_p) + outer_product(Im_r2, Im_r2_p) - theta1_p * ( outer_product(Re_r1, Im_r1) - outer_product(Im_r1, Re_r1) ) - theta2_p * ( outer_product(Re_r2, Im_r2) - outer_product(Im_r2, Re_r2) ) )
 
-end function powerspectrum_is
+	! $\mathbf{\Sigma}_{\pi v}$
+	PV = 2.0 * ( outer_product(Re_r1_p, Re_r1) + outer_product(Im_r1_p, Im_r1) + outer_product(Re_r2_p, Re_r2) + outer_product(Im_r2_p, Im_r2) + theta1_p * ( outer_product(Re_r1, Im_r1) - outer_product(Im_r1, Re_r1) ) + theta2_p * ( outer_product(Re_r2, Im_r2) - outer_product(Im_r2, Re_r2) ) )
+
+	! $\mathbf{\Sigma}_{\pi\pi}$
+	PP = 2.0 * ( outer_product(Re_r1_p, Re_r1_p) + outer_product(Im_r1_p, Im_r1_p) + outer_product(Re_r2_p, Re_r2_p) + outer_product(Im_r2_p, Im_r2_p) - theta1_p * ( outer_product(Re_r1_p, Im_r1) - outer_product(Im_r1_p, Re_r1) - outer_product(Re_r1, Im_r1_p) + outer_product(Im_r1, Re_r1_p) ) - theta2_p * ( outer_product(Re_r2_p, Im_r2) - outer_product(Im_r2_p, Re_r2) - outer_product(Re_r2, Im_r2_p) + outer_product(Im_r2, Re_r2_p) ) + theta1_p**2 * ( outer_product(Re_r1, Re_r1) + outer_product(Im_r1, Im_r1) ) + theta2_p**2 * ( outer_product(Re_r2, Re_r2) + outer_product(Im_r2, Im_r2) ) )
+	
+	! $\mathbf{\Sigma}$
+	Sigma(1:2, 1:2) = VV
+	Sigma(1:2, 3:4) = VP
+	Sigma(3:4, 1:2) = PV
+	Sigma(3:4, 3:4) = PP
+
+end function covmtx
+
+pure function det4x4(M) result(detM)
+	real, intent(in) :: M(4,4)
+	real             :: A(2,2), B(2,2), C(2,2), D(2,2), detM
+	
+	! Block matrices
+	A = M(1:2, 1:2)
+	B = M(1:2, 3:4)
+	C = M(3:4, 1:2)
+	D = M(3:4, 3:4)
+	
+	detM = det(A) * det(D - matmul(C, matmul(inv(A), B)))
+	
+end function det4x4
 
 ! Symmetrizer operator for a 2x2 real matrix
 pure function Sym(A) result(SymA)
@@ -732,5 +792,154 @@ subroutine diagonalization(M, U, eigenvalues)
 	U = reshape([v1, v2], [2,2])
 
 end subroutine diagonalization
+
+!  Generates a random symmetric amplitude array for use in Gaussian bumps metric
+!subroutine generate_amp_GBM(amp_GBM)
+!   use omp_lib
+!   real, intent(out)    :: amp_GBM(:)
+!   integer              :: n, l, tid, nseed
+!   real                 :: left_GBM(size(amp_GBM)/2), r
+!   integer, allocatable :: seed(:)
+!
+!   n   = size(amp_GBM)
+!   tid = omp_get_thread_num()
+!
+!   call random_seed(size=nseed)
+!   allocate(seed(nseed))
+!
+!   ! Unique, reproducible seed per thread
+!   seed = 13579 + 7919*tid
+!   call random_seed(put=seed)
+!
+!   do l = 1, n/2
+!	  call random_number(r)
+!	  left_GBM(l) = merge(25.0, -0.8, r < 0.5)
+!   end do
+!
+!   amp_GBM = [ left_GBM, left_GBM(n/2:1:-1) ]
+!
+!   deallocate(seed)
+!end subroutine
+
+! Check convergence
+logical function convergence(x, x_old, tol)
+	real, intent(in)           :: x, x_old
+	real, intent(in), optional :: tol
+	real                       :: tol_loc
+
+	if (present(tol)) then
+		tol_loc = tol
+	else
+		tol_loc = 1.0d-4 ! Default tolerance
+	end if
+
+	convergence = abs(x - x_old) < tol_loc
+end function convergence
+
+! Initialize phi
+pure function initialize_phi() result(phi)
+	real, dimension(2) :: phi
+
+	select case (potential_shape)
+		case ("ELP")
+			phi = [12.0, 12.0]
+		case ("NLP")
+			phi = [20.0, 20.0]
+		case ("HYP")
+			phi = [20.0, 20.0]
+		case ("MVP")
+			phi = [12.0, 12.0]
+		case ("DEP")
+			phi = [12.0, 12.0]
+	end select
+
+end function initialize_phi
+
+! Calculate eigenvector corresponding to a given eigenvalue of a 2x2 matrix
+subroutine eigvec2x2(M, lambda, vec)
+	real, intent(in)  :: M(2,2)
+	real, intent(in)  :: lambda
+	real, intent(out) :: vec(2)
+	real              :: a, b, c, d
+	real              :: norm1, norm2, norm
+	
+	a = M(1,1) - lambda
+	b = M(1,2)
+	c = M(2,1)
+	d = M(2,2) - lambda
+	
+	norm1 = abs(a) + abs(b)
+	norm2 = abs(c) + abs(d)
+	
+	if (norm1 >= norm2) then
+		vec(1) = -b
+		vec(2) =  a
+	else
+		vec(1) = -d
+		vec(2) =  c
+	end if
+
+	norm = sqrt(vec(1)**2 + vec(2)**2)
+	vec  = vec / norm
+
+end subroutine eigvec2x2
+
+! Calculate eigenvalues and eigenvectors of a symmetric 2x2 matrix
+subroutine eig2x2_sym(M, eigval, eigvec)
+	real, intent(in)  :: M(2,2)
+	real, intent(out) :: eigval(2)
+	real, intent(out) :: eigvec(2,2)
+	real              :: tr, de, disc, a, b, d
+	
+	! Matrix components
+	a = M(1,1)
+	b = M(1,2) ! = c
+	d = M(2,2)
+	
+	! Trace and determinant
+	tr = a + d
+	de = det(M)
+	
+	! Discriminant
+	disc = sqrt((a-d)**2 + 4.0*b**2)
+
+	! Stable eigenvalues
+	if (tr >= 0.0) then
+		eigval(1) = 0.5 * (tr + disc)
+	else
+		eigval(1) = 0.5 * (tr - disc)
+	end if
+
+	eigval(2) = de / eigval(1)
+
+	! Robust eigenvectors
+	call eigvec2x2(M, eigval(1), eigvec(:,1))
+	call eigvec2x2(M, eigval(2), eigvec(:,2))
+
+end subroutine eig2x2_sym
+
+! Calculate eigenvalues and eigenvectors of a symmetric 4x4 matrix
+subroutine eig4x4_sym(M, eigval, eigvec)
+	real, intent(in)  :: M(4,4)
+	real, intent(out) :: eigval(4)
+	real, intent(out) :: eigvec(4,4)
+	integer           :: info
+	real              :: A(4,4)
+	real              :: work(64)
+	integer           :: lwork
+	external          :: dsyev
+	
+	! Copy input matrix (DSYEV overwrites it)
+	A = M
+	
+	lwork = size(work)
+	
+	! Compute eigenvalues and eigenvectors
+	call dsyev( 'V', 'U', 4, A, 4, eigval, work, lwork, info )
+	
+	! On exit, A contains eigenvectors column-wise
+	eigvec = A
+	
+end subroutine eig4x4_sym
 
 end module multifield_utils

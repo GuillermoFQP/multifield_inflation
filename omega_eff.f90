@@ -46,19 +46,7 @@ end if
 ! Background
 !========================================================================================================
 ! Background initial conditions
-select case (potential_shape)
-	case ("ELP")
-		phi = [12.0, 12.0]
-	case ("NLP")
-		phi = [20.0, 20.0]
-	case ("HYP")
-		phi = [20.0, 20.0]
-	case ("MVP")
-		phi = [8.0, 8.0]
-	case ("DEP")
-		phi = [12.0, 12.0]
-end select
-
+phi    = initialize_phi()    ! $\phi^{A}(t_{0})$
 phidot = [0.0,  0.0]         ! $\dot{\phi}^{A}(t_{0})$
 H      = Hubble(phi, phidot) ! $H(t_{0})$
 N      = 0.0                 ! $N(t_{0})$

@@ -2,37 +2,80 @@ module multifield_globals
 
 implicit none
 
-real, parameter             :: pi = 4.0 * atan(1.0)         ! Constant
-character(len=*), parameter :: field_space_geometry = "EUM" ! Choose between "EUM" for Euclidean, "RPM" for Renaux-Petel, "AAM" for alpha-attractor, "OWM" for oscillating warp metric, "GBM" for gaussian bumps metric
-character(len=*), parameter :: potential_shape = "DEP"      ! Choose between "ELP" for elliptic, "NLP" for non-linear, "HYP" for hybrid or "MVP" for modulated valley potential
-real, parameter             :: m1_ELP = 1.4d-6              ! Elliptic potential parameters
-real, parameter             :: m2_ELP = 7.0 * m1_ELP        ! Elliptic potential parameters
-real, parameter             :: lambda_NLP = 1.d-14          ! Non-linear potential parameters
-real, parameter             :: g_NLP = 2.d-14               ! Non-linear potential parameters
-real, parameter             :: mu_NLP = 0.0                 ! Non-linear potential parameters
-real, parameter             :: chi0_HYP = 2.5               ! Hybrid inflation potential parameters
-real, parameter             :: m2_HYP = 1.47d-5             ! Hybrid inflation potential parameters
-real, parameter             :: m1_HYP = 0.3 * m2_HYP        ! Hybrid inflation potential parameters
-real, parameter             :: g_HYP = 0.8 * m2_HYP         ! Hybrid inflation potential parameters
-real, parameter             :: mu_HYP = 0.0                 ! Hybrid inflation potential parameters
-real, parameter             :: m_mvp = 1.4d-6               ! Modulated valley potential parameters
-real, parameter             :: lambda1_mvp = 2.00d-3        ! Modulated valley potential parameters
-real, parameter             :: f1_mvp = 1.00                ! Modulated valley potential parameters
-real, parameter             :: f2_mvp = 10.0                ! Modulated valley potential parameters
-real, parameter             :: f3_mvp = 0.50                ! Modulated valley potential parameters
-real, parameter             :: m1_DEP = 1.4d-6              ! Deformed elliptic potential parameters
-real, parameter             :: m2_DEP = 7.00 * m1_DEP       ! Deformed elliptic potential parameters
-real, parameter             :: amp_DEP = 5.00               ! Deformed elliptic potential parameters
-real, parameter             :: frq_DEP = 1.00               ! Deformed elliptic potential parameters
-real, parameter             :: alpha_aa = 1.0               ! $\alpha$-attractor metric parameters
-real, parameter             :: beta_aa = 1.0d10             ! $\alpha$-attractor metric parameters
-real, parameter             :: amp_OWM = 0.75               ! Oscillatory warp metric parameters
-real, parameter             :: frq_OWM = 10.0               ! Oscillatory warp metric parameters
-integer, parameter          :: n_GBM = 12                   ! Localized gaussian bumps metric number of bumps
-real, parameter             :: spp_GBM = 5.00               ! Localized gaussian bumps metric support radius
-real, parameter             :: amp_GBM(n_GBM) = [-0.85, -0.85, -0.85, -0.85, -0.95, -0.95, -0.95, -0.95, -0.85, -0.85, -0.85, -0.85] ! Localized gaussian bumps metric parameters
-real, parameter             :: std_GBM(n_GBM) = [ 0.25,  0.25,  0.25,  0.25,  0.25,  0.25,  0.25,  0.25,  0.25,  0.25,  0.25,  0.25] ! Localized gaussian bumps metric parameters
-real, parameter             :: x_GBM(n_GBM)   = [-18.0, -15.0, -12.0,  -9.0,  -6.0,  -3.0,   3.0,   6.0,   9.0,  12.0,  15.0,  18.0] ! Localized gaussian bumps metric parameters
-real                        :: energyscale                  ! Renaux-Petel metric parameter (set at runtime)
+!===========================================================================================================================
+! Constants
+real, parameter :: pi = 4.0 * atan(1.0)
+!===========================================================================================================================
+! Metric and potential
+! "EUM" for Euclidean
+! "RPM" for Renaux-Petel
+! "AAM" for alpha-attractor
+! "OWM" for oscillating warp metric
+! "GBM" for Gaussian bumps metric
+character(len=*), parameter :: field_space_geometry = "GBM"
+!===========================================================================================================================
+! Potential
+! "ELP" for elliptic
+! "NLP" for non-linear
+! "HYP" for hybrid
+! "MVP" for modulated valley potential
+! "DEP" for deformed elliptic potential
+character(len=*), parameter :: potential_shape = "MVP"
+!===========================================================================================================================
+! Elliptic potential parameters
+real, parameter :: m1_ELP = 1.4d-6
+real, parameter :: m2_ELP = 10.0 * m1_ELP
+!===========================================================================================================================
+! Non-linear potential parameters
+real, parameter :: lambda_NLP = 1.d-14
+real, parameter :: g_NLP = 2.d-14
+real, parameter :: mu_NLP = 0.0
+!===========================================================================================================================
+! Hybrid inflation potential parameters
+real, parameter :: chi0_HYP = 2.5
+real, parameter :: m2_HYP = 1.47d-5
+real, parameter :: m1_HYP = 0.3 * m2_HYP
+real, parameter :: g_HYP = 0.8 * m2_HYP
+real, parameter :: mu_HYP = 0.0
+!===========================================================================================================================
+! Modulated valley potential parameters
+real, parameter :: m_mvp = 1.4d-6
+real, parameter :: lambda1_mvp = sqrt(m_mvp) ! 2.0d-3
+real, parameter :: f1_mvp = 1.00
+real, parameter :: f2_mvp = 4.00
+real, parameter :: f3_mvp = 2.00
+!===========================================================================================================================
+! Deformed elliptic potential parameters
+real, parameter :: m1_DEP = 1.4d-6
+real, parameter :: m2_DEP = 1.00 * m1_DEP
+real, parameter :: amp_DEP = 5.00
+real, parameter :: frq_DEP = 1.00
+!===========================================================================================================================
+! $\alpha$-attractor metric parameters
+real, parameter :: alpha_aa = 1.0
+real, parameter :: beta_aa = 1.0d10
+!===========================================================================================================================
+! Oscillatory warp metric parameters
+real, parameter :: amp_OWM = 0.92
+real, parameter :: frq_OWM = 5.00
+!===========================================================================================================================
+! Localized gaussian bumps metric number of bumps
+integer            :: c_GBM
+integer, parameter :: n_GBM = 2 * 30
+real, parameter    :: spp_GBM = 5.00
+real               :: left_GBM(n_GBM/2), amp_GBM(n_GBM)
+real, parameter    :: std_GBM(n_GBM) = 0.06
+real, parameter    :: x_GBM(n_GBM) = [ ( -19.0 + (c_GBM-1) * (38.0 / real(n_GBM-1)), c_GBM = 1, n_GBM ) ]
+!===========================================================================================================================
+! Weierstrass metric parameters
+real, parameter :: dsp_WNM = 1.9
+real, parameter :: amp_WNM = 0.2
+real, parameter :: a_WNM = 1.3
+real, parameter :: b_WNM = 5.0
+real, parameter :: c_WNM = 0.25
+real, parameter :: d_WNM = 0.0
+!===========================================================================================================================
+! Renaux-Petel metric parameter (set at runtime)
+real :: energyscale
 
 end module multifield_globals

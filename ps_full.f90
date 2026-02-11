@@ -19,22 +19,25 @@ use multifield_utils
 
 implicit none
 
-real, parameter              :: N_start = 2.5, N_stop = 100.0                    ! Lower and upper bounds for mode injection
-real, parameter              :: N_step = 0.10                                    ! E-fold interval between consecutive mode injections
-real, parameter              :: dt_back = 200.0, dt_pert = 20.0                  ! Time steps
-real, dimension(6)           :: y_back                                           ! Background state array
-real, dimension(28)          :: y_pert                                           ! Background + perturbation state array
-real, dimension(2)           :: phi, phidot                                      ! Field multiplet and its time derivative
-real, dimension(2)           :: Re_r1, Im_r1, Re_r2, Im_r2                       ! Complex amplitude vector
-real, dimension(2)           :: Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p               ! Time derivative of complex amplitude vector
-integer, parameter           :: ngrid_max = int((N_stop - N_start) / N_step) + 1 ! E-fold interval between consecutive mode injections
-real, dimension(2,ngrid_max) :: phi_grid, phidot_grid                            ! Initial conditions for mode-injection
-real, dimension(ngrid_max)   :: H_grid, N_grid, PR_ad, PR_is, x_grid             ! Initial conditions for mode-injection
-real, dimension(2,2)         :: phidotphidot, vbein_PT, W2_ij                    ! Variables
-real                         :: H, H_end, Hdot, N, slowroll, k_mode, k_phys      ! Variables
-real                         :: N_trigger, W_11, W_22                            ! Variables
-integer                      :: i, ngrid                                         ! Indices
-character(len=32)            :: arg                                              ! Command-line argument
+real, parameter                :: N_start = 2.5, N_stop = 100.0                    ! Lower and upper bounds for mode injection
+real, parameter                :: N_step = 0.10                                    ! E-fold interval between consecutive mode injections
+real, parameter                :: dt_back = 200.0, dt_pert = 20.0                  ! Time steps
+real, dimension(6)             :: y_back                                           ! Background state array
+real, dimension(28)            :: y_pert                                           ! Background + perturbation state array
+real, dimension(2)             :: phi, phidot                                      ! Field multiplet and its time derivative
+real, dimension(2)             :: Re_r1, Im_r1, Re_r2, Im_r2                       ! Complex amplitude vector
+real, dimension(2)             :: Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p               ! Time derivative of complex amplitude vector
+integer, parameter             :: ngrid_max = int((N_stop - N_start) / N_step) + 1 ! E-fold interval between consecutive mode injections
+real, dimension(2,ngrid_max)   :: phi_grid, phidot_grid                            ! Initial conditions for mode-injection
+real, dimension(ngrid_max)     :: H_grid, N_grid, x_grid                           ! Initial conditions for mode-injection
+real, dimension(2,2,ngrid_max) :: PS                                               ! Power spectrum matrix
+real, dimension(2,2)           :: phidotphidot, vbein_PT, W2_ij                    ! Variables
+real                           :: H, H_end, Hdot, N, N_end, slowroll               ! Variables
+real                           :: k_mode, k_phys                                   ! Variables
+real                           :: N_trigger, W_11, W_22                            ! Variables
+integer                        :: i, ngrid                                         ! Indices
+logical                        :: condition                                        ! Loop condition
+character(len=32)              :: arg                                              ! Command-line argument
 
 ! Parse argument
 if (field_space_geometry == "RPM") then
@@ -42,23 +45,22 @@ if (field_space_geometry == "RPM") then
 	read (arg, *) energyscale
 end if
 
+if (field_space_geometry == "GBM") then
+	left_GBM = [ &
+20.0, -0.85, 20.0, -0.85, -0.85, &
+20.0, 20.0, -0.85, 20.0, 20.0, &
+-0.85, 20.0, -0.85, 20.0, -0.85, &
+-0.85, 20.0, 20.0, -0.85, 20.0, &
+-0.85, 20.0, 20.0, -0.85, -0.85, &
+20.0, -0.85, 20.0, 20.0, -0.85 ]
+	amp_GBM  = [ left_GBM, left_GBM(n_GBM/2:1:-1) ]
+end if
+
 !========================================================================================================
 ! Background
 !========================================================================================================
 ! Background initial conditions
-select case (potential_shape)
-	case ("ELP")
-		phi = [12.0, 12.0]
-	case ("NLP")
-		phi = [20.0, 20.0]
-	case ("HYP")
-		phi = [20.0, 20.0]
-	case ("MVP")
-		phi = [12.0, 12.0]
-	case ("DEP")
-		phi = [12.0, 12.0]
-end select
-
+phi    = initialize_phi()    ! $\phi^{A}$
 phidot = [0.0,  0.0]         ! $\dot{\phi}^{A}(t_{0})$
 H      = Hubble(phi, phidot) ! $H(t_{0})$
 N      = 0.0                 ! $N(t_{0})$
@@ -69,8 +71,10 @@ call pack_state_background(y_back, phi, phidot, H, N)
 i         = 0       ! Counter
 slowroll  = 0.0     ! Initialize slow-roll parameter $\epsilon(t_{0})$
 N_trigger = N_start ! Initialize mode injection trigger
+condition = .true.  ! Initialize condition
 
-do while (slowroll <= 1.0)
+!do while (slowroll <= 1.0)
+do while (condition)
 	! Update functions of time
 	call unpack_state_background(y_back, phi, phidot, H, N)
 	
@@ -87,9 +91,12 @@ do while (slowroll <= 1.0)
 	end if
 	
 	call gl8_background(y_back, dt_back)
+	
+	if (slowroll >= 1.0 .and. convergence(y_back(6), N)) condition = .false.
 end do
 
-H_end = H ! Hubble parameter at $\epsilon = 1$
+N_end = N ! E-fold number at the end of inflation
+H_end = H ! Hubble parameter  at the end of inflation
 ngrid = i ! Number of grid points
 
 !========================================================================================================
@@ -97,7 +104,7 @@ ngrid = i ! Number of grid points
 !========================================================================================================
 k_phys = 1.0d5 * H_end               ! Physical wave vector magnitude
 
-!$OMP PARALLEL DO PRIVATE(i, phi, phidot, H, N, slowroll, vbein_PT, k_mode, W2_ij, W_11, W_22, Re_r1, Re_r2, Im_r1, Im_r2, Re_r1_p, Re_r2_p, Im_r1_p, Im_r2_p, y_pert, N_trigger) SHARED(phi_grid, phidot_grid, H_grid, N_grid, k_phys, x_grid, PR_ad, PR_is) SCHEDULE(dynamic)
+!$OMP PARALLEL DO PRIVATE(i, phi, phidot, H, N, slowroll, vbein_PT, k_mode, W2_ij, W_11, W_22, Re_r1, Re_r2, Im_r1, Im_r2, Re_r1_p, Re_r2_p, Im_r1_p, Im_r2_p, y_pert, condition) SHARED(phi_grid, phidot_grid, H_grid, N_grid, k_phys, x_grid, PS) SCHEDULE(dynamic)
 do i = 1, ngrid
 	! Background initial conditions
 	phi      = phi_grid(:,i)                   ! $\phi^{A}(t_{0})$
@@ -126,10 +133,11 @@ do i = 1, ngrid
 	! Initialize perturbation functions
 	call pack_state_perturbations(y_pert, phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p)
 	
-	! Data writing trigger
-	N_trigger = N
+	condition = .true. ! Initialize condition
 
-	do while (slowroll <= 1.0)
+!	do while (slowroll <= 1.0)
+!	do while (condition)
+	do while (N <= N_end)
 		! Update functions of time
 		call unpack_state_perturbations(y_pert, phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p)
 		
@@ -137,16 +145,18 @@ do i = 1, ngrid
 		slowroll = - Hubbledot(phi, phidot) / H**2
 		
 		call gl8_perturbations(y_pert, dt_pert, k_mode)
+
+!		if (slowroll >= 1.0 .and. convergence(y_pert(6), N)) condition = .false.
 	end do
 	
 	x_grid(i) = log(k_mode/(exp(N)*H))
-	PR_ad(i)  = powerspectrum_ad(phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, k_mode)
-	PR_is(i)  = powerspectrum_is(phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, k_mode)
+	PS(:,:,i) = powerspectrum(phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, k_mode)
+
 end do
 !$OMP END PARALLEL DO
 
 do i = 1, ngrid
-	write (*,'(7(6e25.10e3))') x_grid(i), PR_ad(i), PR_is(i)
+	write (*,'(7(6e25.10e3))') x_grid(i), PS(:,:,i)
 end do
 
 end program ps_full

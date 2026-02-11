@@ -12,13 +12,14 @@ implicit none
 
 real, parameter    :: dt = 5000.0                 ! Time-step
 integer, parameter :: ngrid = 500                 ! Number of grid points
+real, parameter    :: half_square_side = 15.0     ! Grid size
 real               :: Vgrid(ngrid, ngrid)         ! E-fold number grid
 real, dimension(2) :: phi, phi_min, phi_max, dphi ! Colormap grid parameters
 integer            :: i, j                        ! Indices
 
 ! Define the grid domain
-phi_min = [-20.0, -20.0]
-phi_max = [ 20.0,  20.0]
+phi_min = [-half_square_side, -half_square_side]
+phi_max = [ half_square_side,  half_square_side]
 
 ! Define the step size (NGRID-1 intervals between NGRID points)
 dphi = [(phi_max(1) - phi_min(1)) / real(ngrid),  (phi_max(2) - phi_min(2)) / real(ngrid)]
