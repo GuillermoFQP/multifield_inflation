@@ -19,7 +19,6 @@ real               :: H, Hdot, N, slowroll, N_flush       ! Variables
 integer            :: i, j, k                             ! Indices
 character(len=32)  :: arg                                 ! Command-line argument
 character(len=100) :: filename                            ! Output file name
-logical            :: condition                           ! Loop condition
 
 ! Parse argument
 if (field_space_geometry == "RPM") then

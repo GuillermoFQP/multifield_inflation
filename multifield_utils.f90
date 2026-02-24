@@ -849,6 +849,7 @@ pure function initialize_phi() result(phi)
 			phi = [20.0, 20.0]
 		case ("MVP")
 			phi = [12.0, 12.0]
+!			phi = [6.0 , 6.0 ]
 		case ("DEP")
 			phi = [12.0, 12.0]
 	end select

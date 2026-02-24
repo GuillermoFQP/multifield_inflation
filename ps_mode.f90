@@ -32,7 +32,7 @@ real                 :: H_0, N_0                                    ! Initial co
 real                 :: H, H_end, Hdot, N, slowroll, k_mode, k_phys ! Variables
 real, dimension(2,2) :: phidotphidot, vbein_PT, W2_ij               ! Variables
 real                 :: W_11, W_22, N_flush                         ! Variables
-logical              :: trigger, condition                          ! Mode trigger and loop condition
+logical              :: trigger                                     ! Mode trigger and loop condition
 character(len=32)    :: arg                                         ! Command-line argument
 
 ! Parse argument
@@ -42,7 +42,7 @@ if (field_space_geometry == "RPM") then
 end if
 
 if (field_space_geometry == "GBM") then
-	left_GBM = [ &
+	left_GBM = 0.90 * [ &
 20.0, -0.85, 20.0, -0.85, -0.85, &
 20.0, 20.0, -0.85, 20.0, 20.0, &
 -0.85, 20.0, -0.85, 20.0, -0.85, &
@@ -89,7 +89,8 @@ do while (condition)
 	if (slowroll >= 1.0 .and. convergence(y_back(6), N)) condition = .false.
 end do
 
-H_end = H ! Hubble parameter at $\epsilon = 1$
+N_end = N ! E-fold number at the end of inflation
+H_end = H ! Hubble parameter at the end of inflation
 
 !========================================================================================================
 ! Perturbations
@@ -141,7 +142,7 @@ do while (condition)
 	call gl8_perturbations(y_pert, dt_pert, k_mode)
 	
 	! Update condition
-	if (slowroll >= 1.0 .and. convergence(y_pert(6), N)) condition = .false.
+	if (y_pert(6) >= N_end) condition = .false.
 end do
 
 end program ps_mode

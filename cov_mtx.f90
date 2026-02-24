@@ -29,7 +29,7 @@ real, dimension(2)     :: Re_r1, Im_r1, Re_r2, Im_r2         ! Complex amplitude
 real, dimension(2)     :: Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p ! Time derivative of complex amplitude vector
 real, dimension(2)     :: phi_0, phidot_0                    ! Initial conditions for mode-injection
 real                   :: H_0, N_0                           ! Initial conditions for mode-injection
-real                   :: H, H_end, Hdot, N, N_end, slowroll ! Variables
+real                   :: H, H_end, Hdot, N, slowroll        ! Variables
 real                   :: k_mode, k_phys                     ! Variables
 real, dimension(2,2)   :: phidotphidot, vbein_PT, W2_ij      ! Variables
 real, dimension(2,2,6) :: eigvec                             ! Variables
@@ -39,7 +39,7 @@ real, dimension(4)     :: eigvalSigma, var                   ! Variables
 real                   :: W_11, W_22, N_flush                ! Variables
 real, dimension(4,4)   :: Sigma, eigvecSigma                 ! Covariance matrix $\mathrm{\Sigma}$
 real                   :: det_Sigma                          ! Determinant of covariance matrix
-logical                :: trigger, condition                 ! Mode trigger and loop condition
+logical                :: trigger                            ! Mode trigger and loop condition
 integer                :: i                                  ! Counter
 character(len=32)      :: arg                                ! Command-line argument
 
@@ -166,14 +166,14 @@ do while (condition)
 !	call eig4x4_sym(Sigma, eigvalSigma, eigvecSigma)
 	
 	if (N >= N_flush) then
-		write (*,'(41(6e25.10e3))') N, var, ( eigval(:,i), eigvec(:,:,i), i = 1, 6 ), 
+		write (*,'(41(6e25.10e3))') N, var, ( eigval(:,i), eigvec(:,:,i), i = 1, 6 )
 		N_flush = N_flush + 0.01
 	end if
 	
 	call gl8_perturbations(y_pert, dt_pert, k_mode)
 	
 	! Update condition
-	if (N > N_end) condition = .false.
+	if (y_pert(6) > N_end) condition = .false.
 end do
 
 end program cov_mtx

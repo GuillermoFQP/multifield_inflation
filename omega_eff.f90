@@ -33,6 +33,7 @@ real                 :: H_0, N_0                                    ! Initial co
 real                 :: H, H_end, Hdot, N, slowroll, k_mode, k_phys ! Variables
 real, dimension(2,2) :: phidotphidot, vbein_PT, W2_ij, W2_ij_FT, W2_eff1, W2_eff2, U ! Variables
 real                 :: W_11, W_22, N_flush, r1_mod2, r2_mod2, a2   ! Variables
+real                 :: lambda_H, lambda_phys                       ! Physical scales
 logical              :: trigger                                     ! Mode trigger
 character(len=32)    :: arg                                         ! Command-line argument
 
@@ -75,6 +76,7 @@ do while (slowroll <= 1.0)
 	call gl8_background(y_back, dt_back)
 end do
 
+N_end = N ! E-fold number at the end of inflation
 H_end = H ! Hubble parameter at $\epsilon = 1$
 
 !========================================================================================================
@@ -109,10 +111,10 @@ Im_r2_p  = 0.0
 ! Initialize perturbation functions
 call pack_state_perturbations(y_pert, phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p)
 
-! Data writing trigger
-N_flush = N
+N_flush   = N      ! Initialize data writing trigger
+condition = .true. ! Initialize condition
 
-do while (slowroll <= 1.0)
+do while (condition)
 	! Update functions of time
 	call unpack_state_perturbations(y_pert, phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p)
 	
@@ -120,6 +122,7 @@ do while (slowroll <= 1.0)
 	slowroll = - Hubbledot(phi, phidot) / H**2
 	
 	if (N >= N_flush) then
+		! Calculate squared frequency matrices
 		a2       = exp(2.0 * N)
 		Hdot     = Hubbledot(phi, phidot)
 		r1_mod2  = dot_product(Re_r1, Re_r1) + dot_product(Im_r1, Im_r1)
@@ -130,18 +133,26 @@ do while (slowroll <= 1.0)
 		W2_eff1  = W2_ij - Id * theta1_p**2
 		W2_eff2  = W2_ij - Id * theta2_p**2
 		W2_ij_FT = (k_mode**2 - a2 * (2.0 * H**2 + Hdot)) * Id
-		call diagonalization(W2_ij, U, W2_ij_EV)
-		call diagonalization(W2_eff1, U, W2_eff_EV1)
-		call diagonalization(W2_eff2, U, W2_eff_EV2)
-!		write (*,'(9(6e25.10e3))') N, W2_ij_FT(1,1), W2_ij_FT(2,2), W2_ij_FT(1,1) - theta1_p**2, W2_ij_FT(2,2) - theta1_p**2, W2_ij_FT(1,1) - theta2_p**2, W2_ij_FT(2,2) - theta2_p**2
-!		write (*,'(9(6e25.10e3))') N, W2_ij(1,1), W2_ij(2,2), W2_ij(1,1) - theta1_p**2, W2_ij(2,2) - theta1_p**2, W2_ij(1,1) - theta2_p**2, W2_ij(2,2) - theta2_p**2
-		write (*,'(9(6e25.10e3))') N, W2_ij_EV / a2, W2_eff_EV1 / a2, W2_eff_EV2 / a2, theta1_p**2 / a2, theta2_p**2 / a2
-!		write (*,'(9(6e25.10e3))') Re_r1, Im_r1, Re_r1_p, Im_r1_p
-!		write (*,'(9(6e25.10e3))') Re_r2, Im_r2, Re_r2_p, Im_r2_p
+		
+		! Diagonalize squared frequency matrices
+		call diagonalization(W2_ij, U, W2_ij_EV)     ! eig2x2_sym(W2_ij, W2_ij_EV, U)
+		call diagonalization(W2_eff1, U, W2_eff_EV1) ! eig2x2_sym(W2_eff1, W2_eff_EV1, U)
+		call diagonalization(W2_eff2, U, W2_eff_EV2) ! eig2x2_sym(W2_eff2, W2_eff_EV2, U) 
+		
+		! Calculate the physical scales
+		lambda_H    = log(1.0 / H)
+		lambda_phys = N + log(1.0 / k_mode)
+	
+		! Write data
+		write (*,'(10(6e25.10e3))') N, W2_ij_EV / a2, W2_eff_EV1 / a2, W2_eff_EV2 / a2, theta1_p**2 / a2, theta2_p**2 / a2, lambda_H - lambda_phys
+		
+		! Update data fush variable
 		N_flush = N_flush + 0.01
 	end if
 	
 	call gl8_perturbations(y_pert, dt_pert, k_mode)
+	
+	if (y_pert(6) >= N_end) condition = .false.
 end do
 
 end program omega_eff

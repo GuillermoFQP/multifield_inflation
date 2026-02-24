@@ -20,7 +20,6 @@ real               :: N_flush, k_phys             ! Variables
 integer            :: i, j, k                     ! Indices
 character(len=32)  :: arg                         ! Command-line argument
 character(len=100) :: filename                    ! Output file name
-logical            :: condition                   ! Loop condition
 
 ! Parse argument
 if (field_space_geometry == "RPM") then
@@ -66,6 +65,7 @@ do while (condition)
 end do
 
 H_end  = H             ! Hubble parameter at $\epsilon = 1$
+N_end  = N
 k_phys = 1.0d5 * H_end ! Surface of constant $k_{\mathrm{phys}}$
 
 ! Background initial conditions
@@ -89,16 +89,13 @@ do while (condition) ! (N <= N_bound)
 	slowroll = - Hubbledot(phi, phidot) / H**2
 	
 	if (N >= N_flush) then
-		write (*, '(7(6e25.10e3))') N, log(1.0 / H), log(2.0 * pi / k_phys), slowroll
+		write (*, '(15(6e25.10e3))') N, log(1.0/H), log(1.0/k_phys), [(N + log(1.0/k_phys) - 10.0*real(i), i = 0, 10)], slowroll
 		N_flush = N_flush + dN
 	end if
-!	write (*, '(7(6e25.10e3))') phi, phidot, H, N, slowroll
-!	write (*, '(7(6e25.10e3))') N, log(1.0 / H), log(2.0 * pi / k_phys), slowroll
 	
 	call gl8_background(y, dt)
 	
-	if (slowroll >= 1.0 .and. convergence(y(6), N)) condition = .false.
-!	if (slowroll >= 1.0) condition = .false.
+	if (y(6) >= N_end) condition = .false.
 end do
 
 end program mode_injection

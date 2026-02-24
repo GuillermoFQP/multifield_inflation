@@ -20,7 +20,7 @@ use multifield_utils
 implicit none
 
 real, parameter                :: N_start = 2.5, N_stop = 100.0                    ! Lower and upper bounds for mode injection
-real, parameter                :: N_step = 0.10                                    ! E-fold interval between consecutive mode injections
+real, parameter                :: N_step = 0.01                                    ! E-fold interval between consecutive mode injections
 real, parameter                :: dt_back = 200.0, dt_pert = 20.0                  ! Time steps
 real, dimension(6)             :: y_back                                           ! Background state array
 real, dimension(28)            :: y_pert                                           ! Background + perturbation state array
@@ -32,11 +32,10 @@ real, dimension(2,ngrid_max)   :: phi_grid, phidot_grid                         
 real, dimension(ngrid_max)     :: H_grid, N_grid, x_grid                           ! Initial conditions for mode-injection
 real, dimension(2,2,ngrid_max) :: PS                                               ! Power spectrum matrix
 real, dimension(2,2)           :: phidotphidot, vbein_PT, W2_ij                    ! Variables
-real                           :: H, H_end, Hdot, N, N_end, slowroll               ! Variables
+real                           :: H, H_end, Hdot, N, slowroll                      ! Variables
 real                           :: k_mode, k_phys                                   ! Variables
 real                           :: N_trigger, W_11, W_22                            ! Variables
 integer                        :: i, ngrid                                         ! Indices
-logical                        :: condition                                        ! Loop condition
 character(len=32)              :: arg                                              ! Command-line argument
 
 ! Parse argument
@@ -45,8 +44,10 @@ if (field_space_geometry == "RPM") then
 	read (arg, *) energyscale
 end if
 
-if (field_space_geometry == "GBM") then
-	left_GBM = [ &
+if (field_space_geometry == "GBM" .and. potential_shape == "NLP") then
+	call get_command_argument(1, arg)
+	read (arg, *) amp_factor
+	left_GBM = amp_factor * [ &
 20.0, -0.85, 20.0, -0.85, -0.85, &
 20.0, 20.0, -0.85, 20.0, 20.0, &
 -0.85, 20.0, -0.85, 20.0, -0.85, &
@@ -54,6 +55,12 @@ if (field_space_geometry == "GBM") then
 -0.85, 20.0, 20.0, -0.85, -0.85, &
 20.0, -0.85, 20.0, 20.0, -0.85 ]
 	amp_GBM  = [ left_GBM, left_GBM(n_GBM/2:1:-1) ]
+end if
+
+if (field_space_geometry == "EUM" .and. potential_shape == "MVP") then
+	call get_command_argument(1, arg)
+	read (arg, *) amp_factor
+	lambda1_mvp = amp_factor * sqrt(m_mvp)
 end if
 
 !========================================================================================================
@@ -102,9 +109,9 @@ ngrid = i ! Number of grid points
 !========================================================================================================
 ! Perturbations
 !========================================================================================================
-k_phys = 1.0d5 * H_end               ! Physical wave vector magnitude
+k_phys = 1.0d5 * H_end ! Physical wave vector magnitude
 
-!$OMP PARALLEL DO PRIVATE(i, phi, phidot, H, N, slowroll, vbein_PT, k_mode, W2_ij, W_11, W_22, Re_r1, Re_r2, Im_r1, Im_r2, Re_r1_p, Re_r2_p, Im_r1_p, Im_r2_p, y_pert, condition) SHARED(phi_grid, phidot_grid, H_grid, N_grid, k_phys, x_grid, PS) SCHEDULE(dynamic)
+!$OMP PARALLEL DO PRIVATE(i, phi, phidot, H, N, slowroll, vbein_PT, k_mode, W2_ij, W_11, W_22, Re_r1, Re_r2, Im_r1, Im_r2, Re_r1_p, Re_r2_p, Im_r1_p, Im_r2_p, y_pert, condition) SHARED(phi_grid, phidot_grid, H_grid, N_grid, k_phys, x_grid, PS, N_end) SCHEDULE(dynamic)
 do i = 1, ngrid
 	! Background initial conditions
 	phi      = phi_grid(:,i)                   ! $\phi^{A}(t_{0})$
@@ -135,9 +142,7 @@ do i = 1, ngrid
 	
 	condition = .true. ! Initialize condition
 
-!	do while (slowroll <= 1.0)
-!	do while (condition)
-	do while (N <= N_end)
+	do while (condition)
 		! Update functions of time
 		call unpack_state_perturbations(y_pert, phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, Re_r1_p, Im_r1_p, Re_r2_p, Im_r2_p)
 		
@@ -146,7 +151,7 @@ do i = 1, ngrid
 		
 		call gl8_perturbations(y_pert, dt_pert, k_mode)
 
-!		if (slowroll >= 1.0 .and. convergence(y_pert(6), N)) condition = .false.
+		if (y_pert(6) >= N_end) condition = .false.
 	end do
 	
 	x_grid(i) = log(k_mode/(exp(N)*H))
