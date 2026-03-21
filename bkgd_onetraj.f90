@@ -23,7 +23,7 @@ character(len=100) :: filename                            ! Output file name
 ! Parse argument
 if (field_space_geometry == "RPM") then
 	call get_command_argument(1, arg)
-	read (arg, *) energyscale
+	read (arg, *) M_RPM
 end if
 
 ! Create destination directory

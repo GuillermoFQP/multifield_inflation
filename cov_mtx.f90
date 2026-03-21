@@ -19,7 +19,7 @@ use multifield_utils
 
 implicit none
 
-real, parameter        :: N_trigger = 5.0                    ! Mode trigger
+real, parameter        :: N_trigger = 0.50                   ! Mode trigger
 real, parameter        :: dt_back = 200.0                    ! Background time step
 real, parameter        :: dt_pert = 20.0                     ! Perturbation time step (~0.1 for HYP and ~20.0 for NLP and ELP)
 real, dimension(6)     :: y_back                             ! Background state array
@@ -46,11 +46,13 @@ character(len=32)      :: arg                                ! Command-line argu
 ! Parse argument
 if (field_space_geometry == "RPM") then
 	call get_command_argument(1, arg)
-	read (arg, *) energyscale
+	read (arg, *) M_RPM
 end if
 
-if (field_space_geometry == "GBM") then
-	left_GBM = [ &
+if (field_space_geometry == "GBM" .and. potential_shape == "NLP") then
+	call get_command_argument(1, arg)
+	read (arg, *) amp_factor
+	left_GBM = amp_factor * [ &
 20.0, -0.85, 20.0, -0.85, -0.85, &
 20.0, 20.0, -0.85, 20.0, 20.0, &
 -0.85, 20.0, -0.85, 20.0, -0.85, &
@@ -60,12 +62,19 @@ if (field_space_geometry == "GBM") then
 	amp_GBM  = [ left_GBM, left_GBM(n_GBM/2:1:-1) ]
 end if
 
+if (field_space_geometry == "EUM" .and. potential_shape == "MVP") then
+	call get_command_argument(1, arg)
+	read (arg, *) amp_factor
+	lambda1_mvp = amp_factor * sqrt(m_mvp)
+end if
+
 !========================================================================================================
 ! Background
 !========================================================================================================
 ! Background initial conditions
 phi    = initialize_phi()    ! $\phi^{A}$
-phidot = [0.0,  0.0]         ! $\dot{\phi}^{A}(t_{0})$
+!phidot = [0.0,  0.0]         ! $\dot{\phi}^{A}(t_{0})$
+phidot = 0.0003 * [cos(2.0 * pi * 0.5), sin(2.0 * pi * 0.5)]
 H      = Hubble(phi, phidot) ! $H(t_{0})$
 N      = 0.0                 ! $N(t_{0})$
 
@@ -95,6 +104,7 @@ do while (condition)
 	
 	! Update condition
 	if (slowroll >= 1.0 .and. convergence(y_back(6), N)) condition = .false.
+!	if (slowroll >= 1.0) condition = .false.
 end do
 
 N_end = N ! E-fold number at the end of inflation
@@ -161,13 +171,14 @@ do while (condition)
 	
 	! Calculate
 	do i = 1, 6
+!		call diagonalization_LAPACK(submtx(:,:,i), eigval(:,i), eigvec(:,:,i))
 		call eig2x2_sym(submtx(:,:,i), eigval(:,i), eigvec(:,:,i))
 	end do
 !	call eig4x4_sym(Sigma, eigvalSigma, eigvecSigma)
 	
 	if (N >= N_flush) then
-		write (*,'(41(6e25.10e3))') N, var, ( eigval(:,i), eigvec(:,:,i), i = 1, 6 )
-		N_flush = N_flush + 0.01
+		write (*,'(41(6e25.10e3))') N, var, ( eigval(:,i), eigvec(:,:,i), i = 1, 6 ), phi
+		N_flush = N_flush + 0.025
 	end if
 	
 	call gl8_perturbations(y_pert, dt_pert, k_mode)

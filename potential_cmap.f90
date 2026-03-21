@@ -16,10 +16,19 @@ real, parameter    :: half_square_side = 15.0     ! Grid size
 real               :: Vgrid(ngrid, ngrid)         ! E-fold number grid
 real, dimension(2) :: phi, phi_min, phi_max, dphi ! Colormap grid parameters
 integer            :: i, j                        ! Indices
+character(len=32)  :: arg                         ! Command-line argument
+
+if (field_space_geometry == "EUM" .and. potential_shape == "MVP") then
+	call get_command_argument(1, arg)
+	read (arg, *) amp_factor
+	lambda1_mvp = amp_factor * sqrt(m_mvp)
+end if
 
 ! Define the grid domain
-phi_min = [-half_square_side, -half_square_side]
-phi_max = [ half_square_side,  half_square_side]
+!phi_min = [-half_square_side, -half_square_side]
+!phi_max = [ half_square_side,  half_square_side]
+phi_min = [0.0, 0.0]
+phi_max = [10.0, 10.0]
 
 ! Define the step size (NGRID-1 intervals between NGRID points)
 dphi = [(phi_max(1) - phi_min(1)) / real(ngrid),  (phi_max(2) - phi_min(2)) / real(ngrid)]

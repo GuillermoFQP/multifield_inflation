@@ -40,7 +40,7 @@ character(len=32)    :: arg                                         ! Command-li
 ! Parse argument
 if (field_space_geometry == "RPM") then
 	call get_command_argument(1, arg)
-	read (arg, *) energyscale
+	read (arg, *) M_RPM
 end if
 
 !========================================================================================================
@@ -135,9 +135,9 @@ do while (condition)
 		W2_ij_FT = (k_mode**2 - a2 * (2.0 * H**2 + Hdot)) * Id
 		
 		! Diagonalize squared frequency matrices
-		call diagonalization(W2_ij, U, W2_ij_EV)     ! eig2x2_sym(W2_ij, W2_ij_EV, U)
-		call diagonalization(W2_eff1, U, W2_eff_EV1) ! eig2x2_sym(W2_eff1, W2_eff_EV1, U)
-		call diagonalization(W2_eff2, U, W2_eff_EV2) ! eig2x2_sym(W2_eff2, W2_eff_EV2, U) 
+		call diagonalization(W2_ij, W2_ij_EV, U)     ! eig2x2_sym(W2_ij, W2_ij_EV, U)
+		call diagonalization(W2_eff1, W2_eff_EV1, U) ! eig2x2_sym(W2_eff1, W2_eff_EV1, U)
+		call diagonalization(W2_eff2, W2_eff_EV2, U) ! eig2x2_sym(W2_eff2, W2_eff_EV2, U)
 		
 		! Calculate the physical scales
 		lambda_H    = log(1.0 / H)

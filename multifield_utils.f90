@@ -245,7 +245,7 @@ pure function metric(phi) result(h_AB)
 			h_AB(1,1) = 1.0
 			h_AB(2,2) = 1.0
 		case ("RPM")
-			h_AB(1,1) = 1.0 + 2.0 * phi(2)**2 / energyscale**2
+			h_AB(1,1) = 1.0 + 2.0 * phi(2)**2 / M_RPM**2
 			h_AB(2,2) = 1.0
 		case ("AAM")
 			h_AB(1,1) = 1.0 / (1.0 - phi(1)**2 / (6.0 * alpha_aa))**2
@@ -280,7 +280,7 @@ pure function inv_metric(phi) result(hAB)
 		case ("EUM")
 			hAB = reshape([1.0, 0.0, 0.0, 1.0], [2,2])
 		case ("RPM")
-			hAB(1,1) = 1.0 * energyscale**2 / (1.0 * energyscale**2 + 2.0 * phi(2)**2)
+			hAB(1,1) = 1.0 * M_RPM**2 / (1.0 * M_RPM**2 + 2.0 * phi(2)**2)
 			hAB(2,2) = 1.0
 		case ("AAM")
 			hAB(1,1) = (1.0 - phi(1)**2 / (6.0 * alpha_aa))**2
@@ -316,9 +316,9 @@ pure function Christoffel(phi) result(Gamma)
 		case ("EUM")
 			! Nothing to do
 		case ("RPM")
-			Gamma(1,1,2) = 2.0 * phi(2) / (energyscale**2 + 2.0 * phi(2)**2)
+			Gamma(1,1,2) = 2.0 * phi(2) / (M_RPM**2 + 2.0 * phi(2)**2)
 			Gamma(1,2,1) = Gamma(1,1,2)
-			Gamma(2,1,1) = -2.0 * phi(2) / energyscale**2
+			Gamma(2,1,1) = -2.0 * phi(2) / M_RPM**2
 		case ("AAM")
 			Gamma(1,1,1) = phi(1) / (3.0 * alpha_aa * (1.0 - phi(1)**2 / (6.0 * alpha_aa)))
 			Gamma(2,2,2) = phi(2) / (3.0 *  beta_aa * (1.0 - phi(2)**2 / (6.0 *  beta_aa)))
@@ -360,7 +360,7 @@ pure function Riemann(phi) result(R)
 		case ("EUM")
 			! Nothing to do
 		case ("RPM")
-			R(1,2,1,2) = -0.5 / (0.25 * energyscale**2 + 0.5 * phi(2)**2)
+			R(1,2,1,2) = -0.5 / (0.25 * M_RPM**2 + 0.5 * phi(2)**2)
 		case ("AAM")
 			! Nothing to do
 		case ("OWM")
@@ -607,7 +607,7 @@ pure function mass_matrix(phi, phidot, H) result (M)
 
 end function mass_matrix
 
-! Vielbein adiabatic-isocurvature $e^{A}_{i}$
+! Vielbein adiabatic-isocurvature $e^{A}_{i}$ using Levi-Civita tensor (for 2D field-space only)
 pure function vielbein_ad_is(phi, phidot) result(vbein_AI)
 	real, intent(in) :: phi(2), phidot(2)
 	real             :: h_AB(2,2), vbein_AI(2,2), phidotphidot(2,2), epsilon(2,2), varepsilon(2,2), phidot_mag
@@ -624,6 +624,35 @@ pure function vielbein_ad_is(phi, phidot) result(vbein_AI)
 	vbein_AI(:,2) = matmul(matmul(varepsilon, h_AB), phidot) / phidot_mag ! $e^{A}_{2} = \frac{\varepsilon^{AB} h_{BC} \dot{\varphi}^{C}}{|\dot{\varphi}|}$
 
 end function vielbein_ad_is
+
+! Vielbein adiabatic-isocurvature $e^{A}_{i}$ using Gram-Schmidt process
+!pure function vielbein_ad_is(phi, phidot) result(vbein_AI)
+!	real, intent(in)     :: phi(2), phidot(2)
+!	real, dimension(2,2) :: vbein_AI, h_AB
+!	real, dimension(2)   :: v
+!	real                 :: proj, norm
+!	integer              :: i, j
+!	
+!	h_AB = metric(phi)
+!	norm = sqrt(sum(h_AB * outer_product(phidot, phidot)))
+!
+!	! Adiabatic direction
+!	vbein_AI(:,1) = phidot / norm
+!
+!	! Gram-Schmidt for isocurvature directions
+!	! Trial vector
+!	v    = 0.0
+!	v(2) = 1.0
+!
+!	! Remove projections onto previous vectors
+!	proj = sum(h_AB * outer_product(vbein_AI(:,1), v))
+!	v = v - proj * vbein_AI(:,1)
+!
+!	! Normalize
+!	norm = sqrt(sum(h_AB * outer_product(v, v)))
+!	vbein_AI(:,2) = v / norm
+!
+!end function vielbein_ad_is
 
 ! Tensor product
 pure function outer_product(v1, v2) result(product)
@@ -748,9 +777,9 @@ pure function Sym(A) result(SymA)
 end function Sym
 
 ! Compute the orthonormal matrix $\mathbf{U}$ such that $\mathbf{U^{\intercal} M U}$ is diagonal, where $\mathbf{M}$ is symmetric
-subroutine diagonalization(M, U, eigenvalues)
+subroutine diagonalization(M, eigenvalues, U)
 	real, intent(in)  :: M(2,2)
-	real, intent(out) :: U(2,2), eigenvalues(2)
+	real, intent(out) :: eigenvalues(2), U(2,2)
 	real              :: discriminant, v1(2), v2(2)
 	
 	! Calculate discriminant
@@ -792,6 +821,33 @@ subroutine diagonalization(M, U, eigenvalues)
 	U = reshape([v1, v2], [2,2])
 
 end subroutine diagonalization
+
+! Compute the orthonormal matrix $\mathbf{U}$ such that $\mathbf{U^{\intercal} M U}$ is diagonal, where $\mathbf{M}$ is symmetric, using LAPACK
+subroutine diagonalization_LAPACK(M, eigenvalues, U)
+	real, intent(in)  :: M(2,2)
+	real, intent(out) :: eigenvalues(2)
+	real, intent(out) :: U(2,2)
+	real              :: A(2,2), work(10)
+	integer           :: lwork, info
+
+	! Copy M because DSYEV overwrites the input matrix
+	A = M
+
+	! Workspace size (for N=2 this is more than enough)
+	lwork = 10
+
+	! Compute eigenvalues and eigenvectors
+	call dsyev('V', 'U', 2, A, 2, eigenvalues, work, lwork, info)
+
+	if (info /= 0) then
+		write(*,*) 'LAPACK DSYEV failed. INFO = ', info
+		error stop 'Diagonalization failed'
+	end if
+
+	! DSYEV returns eigenvectors in columns of A
+	U = A
+
+end subroutine diagonalization_LAPACK
 
 !  Generates a random symmetric amplitude array for use in Gaussian bumps metric
 !subroutine generate_amp_GBM(amp_GBM)
@@ -842,14 +898,16 @@ pure function initialize_phi() result(phi)
 
 	select case (potential_shape)
 		case ("ELP")
-			phi = [12.0, 12.0]
+			phi = [12.0, 12.0] ! [7.0, 10.0] ! [12.0, 12.0]
+!			phi = [8.0, 8.0]
 		case ("NLP")
 			phi = [20.0, 20.0]
 		case ("HYP")
 			phi = [20.0, 20.0]
 		case ("MVP")
-			phi = [12.0, 12.0]
-!			phi = [6.0 , 6.0 ]
+!			phi = [20.0, 20.0] ! For lambda1_mvp = 1.0 * sqrt(m_mvp)
+!			phi = [6.0 , 6.0 ] ! For lambda1_mvp = 2.0d-3
+			phi = [8.0, 8.0 ]
 		case ("DEP")
 			phi = [12.0, 12.0]
 	end select

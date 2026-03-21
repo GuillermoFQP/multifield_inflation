@@ -6,13 +6,13 @@ implicit none
 ! Constants
 real, parameter :: pi = 4.0 * atan(1.0)
 !===========================================================================================================================
-! Metric and potential
+! Field-space metric
 ! "EUM" for Euclidean metric
 ! "RPM" for Renaux-Petel metric
 ! "AAM" for alpha-attractor metric
 ! "OWM" for oscillating warp metric
 ! "GBM" for Gaussian bumps metric
-character(len=*), parameter :: field_space_geometry = "GBM"
+character(len=*), parameter :: field_space_geometry = "RPM"
 !===========================================================================================================================
 ! Potential
 ! "ELP" for elliptic potential
@@ -20,11 +20,11 @@ character(len=*), parameter :: field_space_geometry = "GBM"
 ! "HYP" for hybrid potential
 ! "MVP" for modulated valley potential
 ! "DEP" for deformed elliptic potential
-character(len=*), parameter :: potential_shape = "NLP"
+character(len=*), parameter :: potential_shape = "ELP"
 !===========================================================================================================================
 ! Elliptic potential parameters
-real, parameter :: m1_ELP = 1.4d-6
-real, parameter :: m2_ELP = 10.0 * m1_ELP
+real, parameter :: m1_ELP = 1.4d-6 ! 1.4d-6
+real, parameter :: m2_ELP = 15.0 * m1_ELP
 !===========================================================================================================================
 ! Non-linear potential parameters
 real, parameter :: lambda_NLP = 1.d-14
@@ -37,13 +37,13 @@ real, parameter :: m2_HYP = 1.47d-5
 real, parameter :: m1_HYP = 0.3 * m2_HYP
 real, parameter :: g_HYP = 0.8 * m2_HYP
 real, parameter :: mu_HYP = 0.0
-real            :: lambda1_mvp ! = 0.05 * sqrt(m_mvp) ! 2.0d-3
 !===========================================================================================================================
 ! Modulated valley potential parameters
-real, parameter :: m_mvp = 1.4d-6
-real, parameter :: f1_mvp = 1.00
-real, parameter :: f2_mvp = 4.00
-real, parameter :: f3_mvp = 2.00
+real, parameter :: m_MVP = 1.4d-6
+real, parameter :: f1_MVP = 5.00 ! 1.00
+real, parameter :: f2_MVP = 12.0 ! 4.00
+real, parameter :: f3_MVP = 0.50 ! 2.00
+real            :: lambda1_MVP ! = 0.05 * sqrt(m_mvp) ! 2.0d-3
 !===========================================================================================================================
 ! Deformed elliptic potential parameters
 real, parameter :: m1_DEP = 1.4d-6
@@ -76,7 +76,7 @@ real, parameter :: c_WNM = 0.25
 real, parameter :: d_WNM = 0.0
 !===========================================================================================================================
 ! Global variables set at runtime
-real    :: energyscale ! Renaux-Petel metric parameter
+real    :: M_RPM       ! Renaux-Petel metric parameter
 real    :: N_end       ! E-fold number at the end of inflation
 logical :: condition   ! Loop condition
 real    :: amp_factor  ! Variable amplitude factor for metrics and potentials

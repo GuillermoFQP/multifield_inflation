@@ -20,8 +20,8 @@ use multifield_utils
 implicit none
 
 real, parameter                :: N_start = 2.5, N_stop = 100.0                    ! Lower and upper bounds for mode injection
-real, parameter                :: N_step = 0.01                                    ! E-fold interval between consecutive mode injections
-real, parameter                :: dt_back = 200.0, dt_pert = 20.0                  ! Time steps
+real, parameter                :: N_step = 0.25                                    ! E-fold interval between consecutive mode injections
+real, parameter                :: dt_back = 200.0, dt_pert = 40.0                  ! Time steps (200 and 40)
 real, dimension(6)             :: y_back                                           ! Background state array
 real, dimension(28)            :: y_pert                                           ! Background + perturbation state array
 real, dimension(2)             :: phi, phidot                                      ! Field multiplet and its time derivative
@@ -41,7 +41,7 @@ character(len=32)              :: arg                                           
 ! Parse argument
 if (field_space_geometry == "RPM") then
 	call get_command_argument(1, arg)
-	read (arg, *) energyscale
+	read (arg, *) M_RPM
 end if
 
 if (field_space_geometry == "GBM" .and. potential_shape == "NLP") then
@@ -102,7 +102,8 @@ do while (condition)
 	if (slowroll >= 1.0 .and. convergence(y_back(6), N)) condition = .false.
 end do
 
-N_end = N ! E-fold number at the end of inflation
+!N_end = N ! E-fold number at the end of inflation
+N_end = 74.05464952d0
 H_end = H ! Hubble parameter  at the end of inflation
 ngrid = i ! Number of grid points
 

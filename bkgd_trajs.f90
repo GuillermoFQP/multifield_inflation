@@ -27,7 +27,7 @@ character(len=100) :: filename                            ! Output file name
 ! Parse argument
 if (field_space_geometry == "RPM") then
 	call get_command_argument(1, arg)
-	read (arg, *) energyscale
+	read (arg, *) M_RPM
 end if
 
 ! Create destination directory
@@ -61,7 +61,7 @@ do j = 1, ntrajsy
 		call random_seed()                                                            ! $\dot{\phi}^{A}(t_{0})$ in random direction
 		call random_number(r)                                                         ! $\dot{\phi}^{A}(t_{0})$ in random direction
 		theta  = 2.0 * pi * r                                                         ! $\dot{\phi}^{A}(t_{0})$ in random direction
-		phidot = 0.0075 * [cos(theta), sin(theta)]                                     ! $\dot{\phi}^{A}(t_{0})$ in random direction
+		phidot = 0.0075 * [cos(theta), sin(theta)]                                    ! $\dot{\phi}^{A}(t_{0})$ in random direction
 		H      = Hubble(phi, phidot)                                                  ! $H(t_{0})$
 		N      = 0.0                                                                  ! $N(t_{0})$
 		

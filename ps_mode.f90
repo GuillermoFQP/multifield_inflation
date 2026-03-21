@@ -21,7 +21,7 @@ implicit none
 
 real, parameter      :: N_trigger = 2.5                             ! Mode trigger
 real, parameter      :: dt_back = 200.0                             ! Background time step
-real, parameter      :: dt_pert = 20.0                              ! Perturbation time step (~0.1 for HYP and ~20.0 for NLP and ELP)
+real, parameter      :: dt_pert = 40.0                              ! Perturbation time step (~0.1 for HYP and ~20.0 for NLP and ELP)
 real, dimension(6)   :: y_back                                      ! Background state array
 real, dimension(28)  :: y_pert                                      ! Background + perturbation state array
 real, dimension(2)   :: phi, phidot                                 ! Field multiplet and its time derivative
@@ -38,11 +38,13 @@ character(len=32)    :: arg                                         ! Command-li
 ! Parse argument
 if (field_space_geometry == "RPM") then
 	call get_command_argument(1, arg)
-	read (arg, *) energyscale
+	read (arg, *) M_RPM
 end if
 
-if (field_space_geometry == "GBM") then
-	left_GBM = 0.90 * [ &
+if (field_space_geometry == "GBM" .and. potential_shape == "NLP") then
+	call get_command_argument(1, arg)
+	read (arg, *) amp_factor
+	left_GBM = amp_factor * [ &
 20.0, -0.85, 20.0, -0.85, -0.85, &
 20.0, 20.0, -0.85, 20.0, 20.0, &
 -0.85, 20.0, -0.85, 20.0, -0.85, &
@@ -50,6 +52,12 @@ if (field_space_geometry == "GBM") then
 -0.85, 20.0, 20.0, -0.85, -0.85, &
 20.0, -0.85, 20.0, 20.0, -0.85 ]
 	amp_GBM  = [ left_GBM, left_GBM(n_GBM/2:1:-1) ]
+end if
+
+if (field_space_geometry == "EUM" .and. potential_shape == "MVP") then
+	call get_command_argument(1, arg)
+	read (arg, *) amp_factor
+	lambda1_mvp = amp_factor * sqrt(m_mvp)
 end if
 
 !========================================================================================================
@@ -135,7 +143,7 @@ do while (condition)
 	slowroll = - Hubbledot(phi, phidot) / H**2
 	
 	if (N >= N_flush) then
-		write (*,'(7(6e25.10e3))') N, powerspectrum(phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, k_mode)
+		write (*,'(7(6e25.10e3))') N, powerspectrum(phi, phidot, H, N, vbein_PT, Re_r1, Im_r1, Re_r2, Im_r2, k_mode), N_end
 		N_flush = N_flush + 0.01
 	end if
 	
