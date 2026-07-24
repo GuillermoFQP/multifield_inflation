@@ -663,7 +663,7 @@ pure function epsilon_sr(phi, phidot, H) result(eps)
 
 end function epsilon_sr
 
-! Slow-roll parameter $\eta_{\parallel}$ (covariant acceleration projected onto the adiabatic direction)
+! Slow-roll parameter $\eta_{\parallel}$ (covariant acceleration projected onto the adiabatic direction, in Hubble units)
 pure function eta_sr(phi, phidot, H) result(eta)
 	real, intent(in)     :: phi(2), phidot(2), H
 	real                 :: eta
@@ -676,18 +676,18 @@ pure function eta_sr(phi, phidot, H) result(eta)
 	Gammaphidot       = Gamma_phidot(phi, phidot)     ! $\Gamma^{A}_{BC} \dot{\varphi}^{C}$
 	Gammaphidotphidot = matmul(Gammaphidot, phidot)   ! $\Gamma^{A}_{BC} \dot{\varphi}^{B} \dot{\varphi}^{C}$
 	Dtphidot          = phidotdot + Gammaphidotphidot ! $\mathcal{D}_{t} \dot{\varphi}^{A}$
-	vbein_AI          = vielbein_ad_is(phi, phidot)   ! $e^{A}_{i}$ (adiabatic-isocurvature vielbein)
-	T_adb             = vbein_AI(:,1)                 ! $e^{A}_{1}$, adiabatic (tangent) direction
+	vbein_AI          = vielbein_ad_is(phi, phidot)   ! $e^{A}_{\cal X}$ (adiabatic-isocurvature vielbein)
+	T_adb             = vbein_AI(:,1)                 ! $e^{A}_{\cal R}$, adiabatic (tangent) direction
 	phidot_mag        = sqrt(sum(h_AB * outer_product(phidot, phidot))) ! $|\dot{\varphi}|$
 	
-	eta = sum(h_AB * outer_product(T_adb, Dtphidot)) / (H * phidot_mag) ! $\eta_{\parallel} \equiv - \frac{h_{AB} \, e^{A}_{1} \, \mathcal{D}_{t}\dot{\varphi}^{B}}{H |\dot{\varphi}|}$
+	eta = sum(h_AB * outer_product(T_adb, Dtphidot)) / (H * phidot_mag) ! $\eta_{\parallel} \equiv - \frac{h_{AB} \, e^{A}_{\cal R} \, \mathcal{D}_{t}\dot{\varphi}^{B}}{H |\dot{\varphi}|}$
 
 end function eta_sr
 
-! Turn rate $\omega$ (covariant acceleration projected onto the isocurvature direction, in Hubble units)
-pure function turnrate(phi, phidot, H) result(omega)
+! Turn rate $\eta_{\perp}$ (covariant acceleration projected onto the isocurvature direction, in Hubble units)
+pure function turnrate(phi, phidot, H) result(eta)
 	real, intent(in)     :: phi(2), phidot(2), H
-	real                 :: omega
+	real                 :: eta
 	real, dimension(2)   :: phidotdot, Gammaphidotphidot, Dtphidot, N_iso
 	real, dimension(2,2) :: h_AB, Gammaphidot, vbein_AI
 	real                 :: phidot_mag
@@ -697,11 +697,11 @@ pure function turnrate(phi, phidot, H) result(omega)
 	Gammaphidot       = Gamma_phidot(phi, phidot)     ! $\Gamma^{A}_{BC} \dot{\varphi}^{C}$
 	Gammaphidotphidot = matmul(Gammaphidot, phidot)   ! $\Gamma^{A}_{BC} \dot{\varphi}^{B} \dot{\varphi}^{C}$
 	Dtphidot          = phidotdot + Gammaphidotphidot ! $\mathcal{D}_{t} \dot{\varphi}^{A}$
-	vbein_AI          = vielbein_ad_is(phi, phidot)   ! $e^{A}_{i}$ (adiabatic-isocurvature vielbein)
-	N_iso             = vbein_AI(:,2)                 ! $e^{A}_{2}$, isocurvature direction
+	vbein_AI          = vielbein_ad_is(phi, phidot)   ! $e^{A}_{\cal X}$ (adiabatic-isocurvature vielbein)
+	N_iso             = vbein_AI(:,2)                 ! $e^{A}_{\cal S}$, isocurvature direction
 	phidot_mag        = sqrt(sum(h_AB * outer_product(phidot, phidot))) ! $|\dot{\varphi}|$
 	
-	omega = sum(h_AB * outer_product(N_iso, Dtphidot)) / (H * phidot_mag) ! $\omega \equiv \frac{h_{AB} \, e^{A}_{2} \, \mathcal{D}_{t}\dot{\varphi}^{B}}{H |\dot{\varphi}|}$
+	eta = sum(h_AB * outer_product(N_iso, Dtphidot)) / (H * phidot_mag) ! $\eta_{\perp} \equiv \frac{h_{AB} \, e^{A}_{\cal S} \, \mathcal{D}_{t}\dot{\varphi}^{B}}{H |\dot{\varphi}|}$
 
 end function turnrate
 
