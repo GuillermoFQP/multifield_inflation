@@ -519,6 +519,21 @@ pure function Hubbledot(phi, phidot) result(Hdot)
 
 end function Hubbledot
 
+! Terminal velocity as an initial condition under the slow-roll condition
+pure function terminal_phidot(phi) result(v)
+	real, intent(in)     :: phi(2)
+	real, dimension(2)   :: v, DV
+	real, dimension(2,2) :: hAB
+	real                 :: H
+	
+	! Slow-roll Hubble parameter (phidot=[0.0,0.0] is passed as argument to get slow-roll condition)
+	hAB = inv_metric(phi)         ! $h^{AB}$
+	DV  = NablaV(phi)             ! $\mathcal{D}_{A} V$
+	H   = Hubble(phi, [0.0,0.0])  ! $H(t)$
+	v   = - matmul(hAB, DV) / (3.0 * H)
+	
+end function terminal_phidot
+
 ! Second time derivative of field multiplet $\ddot{\phi}^{A}$
 pure function phi_dot_dot(phi, phidot, H) result(phidotdot)
 	real, intent(in)       :: phi(2), phidot(2), H
