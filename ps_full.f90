@@ -102,8 +102,8 @@ do while (condition)
 	if (slowroll >= 1.0 .and. convergence(y_back(6), N)) condition = .false.
 end do
 
-!N_end = N ! E-fold number at the end of inflation
-N_end = 74.05464952d0
+N_end = N ! E-fold number at the end of inflation
+!N_end = 74.05464952d0 ! Fixed number
 H_end = H ! Hubble parameter  at the end of inflation
 ngrid = i ! Number of grid points
 

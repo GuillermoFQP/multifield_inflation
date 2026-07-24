@@ -12,7 +12,7 @@ real, parameter :: pi = 4.0 * atan(1.0)
 ! "AAM" for alpha-attractor metric
 ! "OWM" for oscillating warp metric
 ! "GBM" for Gaussian bumps metric
-character(len=*), parameter :: field_space_geometry = "RPM"
+character(len=*), parameter :: field_space_geometry = "EUM"
 !===========================================================================================================================
 ! Potential
 ! "ELP" for elliptic potential
@@ -40,9 +40,9 @@ real, parameter :: mu_HYP = 0.0
 !===========================================================================================================================
 ! Modulated valley potential parameters
 real, parameter :: m_MVP = 1.4d-6
-real, parameter :: f1_MVP = 5.00 ! 1.00
-real, parameter :: f2_MVP = 12.0 ! 4.00
-real, parameter :: f3_MVP = 0.50 ! 2.00
+real, parameter :: f1_MVP = 1.00 ! 5.00
+real, parameter :: f2_MVP = 4.00 ! 12.0
+real, parameter :: f3_MVP = 2.00 ! 0.50
 real            :: lambda1_MVP ! = 0.05 * sqrt(m_mvp) ! 2.0d-3
 !===========================================================================================================================
 ! Deformed elliptic potential parameters

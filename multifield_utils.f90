@@ -261,9 +261,6 @@ pure function metric(phi) result(h_AB)
 					h_AB(2,2) = 1.0 + amp_GBM(i) * exp(-0.5 * (phi(1) - x_GBM(i))**2 / std_GBM(i)**2)
 				end if
 			end do
-		case ("WNM")
-			h_AB(1,1) = 1.0
-			h_AB(2,2) = amp_WNM*(a_WNM**4*cos(b_WNM**4*c_WNM*(d_WNM + phi(1))) + a_WNM**3*cos(b_WNM**3*c_WNM*(d_WNM + phi(1))) + a_WNM**2*cos(b_WNM**2*c_WNM*(d_WNM + phi(1))) + a_WNM*cos(b_WNM*c_WNM*(d_WNM + phi(1))) + cos(c_WNM*(d_WNM + phi(1)))) + dsp_WNM
 	end select
 
 end function metric
@@ -296,9 +293,6 @@ pure function inv_metric(phi) result(hAB)
 					hAB(2,2) = 1.0 / (amp_GBM(i) * exp(-0.5 * (phi(1) - x_GBM(i))**2 / std_GBM(i)**2) + 1.0)
 				end if
 			end do
-		case ("WNM")
-			hAB(1,1) = 1.0
-			hAB(2,2) = 1.0/(a_WNM**4*amp_WNM*cos(b_WNM**4*c_WNM*(d_WNM + phi(1))) + a_WNM**3*amp_WNM*cos(b_WNM**3*c_WNM*(d_WNM + phi(1))) + a_WNM**2*amp_WNM*cos(b_WNM**2*c_WNM*(d_WNM + phi(1))) + a_WNM*amp_WNM*cos(b_WNM*c_WNM*(d_WNM + phi(1))) + amp_WNM*cos(c_WNM*(d_WNM + phi(1))) + dsp_WNM)
 	end select
 
 end function inv_metric
@@ -338,11 +332,6 @@ pure function Christoffel(phi) result(Gamma)
 					Gamma(2,2,1) = Gamma(2,1,2)
 				end if
 			end do
-		case ("WNM")
-			Gamma(1,2,2) = 0.5d0*amp_WNM*c_WNM*(a_WNM**4*b_WNM**4*sin(b_WNM**4*c_WNM*(d_WNM + phi(1))) + a_WNM**3*b_WNM**3*sin(b_WNM**3*c_WNM*(d_WNM + phi(1))) + a_WNM**2*b_WNM**2*sin(b_WNM**2*c_WNM*(d_WNM + phi(1))) + a_WNM*b_WNM*sin(b_WNM*c_WNM*(d_WNM + phi(1))) + sin(c_WNM*(d_WNM + phi(1))))
-			Gamma(2,1,1) = 0
-			Gamma(2,1,2) = -amp_WNM*c_WNM*(a_WNM**4*b_WNM**4*sin(b_WNM**4*c_WNM*(d_WNM + phi(1))) + a_WNM**3*b_WNM**3*sin(b_WNM**3*c_WNM*(d_WNM + phi(1))) + a_WNM**2 *b_WNM**2*sin(b_WNM**2*c_WNM*(d_WNM + phi(1))) + a_WNM*b_WNM*sin(b_WNM*c_WNM*(d_WNM + phi(1))) + sin(c_WNM*(d_WNM + phi(1))))/(2*a_WNM**4*amp_WNM*cos(b_WNM**4*c_WNM*(d_WNM + phi(1))) + 2*a_WNM**3 * amp_WNM*cos(b_WNM**3*c_WNM*(d_WNM + phi(1))) + 2*a_WNM**2*amp_WNM*cos(b_WNM**2*c_WNM*(d_WNM + phi(1))) + 2*a_WNM*amp_WNM*cos(b_WNM*c_WNM*(d_WNM + phi(1))) + 2*amp_WNM*cos(c_WNM*(d_WNM + phi(1))) + 2*dsp_WNM)
-			Gamma(2,2,1) = Gamma(2,1,2)
 	end select
 	
 end function Christoffel
@@ -375,24 +364,6 @@ pure function Riemann(phi) result(R)
 					R(1,2,1,2) = amp_GBM(i) * (0.25 * amp_GBM(i) * dx2 * gbmp**2 + 0.5 * sd2 * (amp_GBM(i) * gbmp + 1.0) * gbmp - 0.5 * dx2 * (amp_GBM(i) * gbmp + 1.0) * gbmp) / (sd2**2 * (amp_GBM(i) * gbmp + 1.0))
 				end if
 			end do
-		case ("WNM")
-			R(1,2,1,2) = 1.0d0*amp_WNM*c_WNM**2*(0.25d0*amp_WNM*(a_WNM**4*b_WNM**4*sin(b_WNM**4* &
-c_WNM*(d_WNM + phi(1))) + a_WNM**3*b_WNM**3*sin(b_WNM**3*c_WNM*( &
-d_WNM + phi(1))) + a_WNM**2*b_WNM**2*sin(b_WNM**2*c_WNM*(d_WNM + &
-phi(1))) + a_WNM*b_WNM*sin(b_WNM*c_WNM*(d_WNM + phi(1))) + sin( &
-c_WNM*(d_WNM + phi(1))))**2 + 0.5d0*(a_WNM**4*b_WNM**8*cos(b_WNM &
-**4*c_WNM*(d_WNM + phi(1))) + a_WNM**3*b_WNM**6*cos(b_WNM**3* &
-c_WNM*(d_WNM + phi(1))) + a_WNM**2*b_WNM**4*cos(b_WNM**2*c_WNM*( &
-d_WNM + phi(1))) + a_WNM*b_WNM**2*cos(b_WNM*c_WNM*(d_WNM + phi(1 &
-))) + cos(c_WNM*(d_WNM + phi(1))))*(a_WNM**4*amp_WNM*cos(b_WNM**4 &
-*c_WNM*(d_WNM + phi(1))) + a_WNM**3*amp_WNM*cos(b_WNM**3*c_WNM*( &
-d_WNM + phi(1))) + a_WNM**2*amp_WNM*cos(b_WNM**2*c_WNM*(d_WNM + &
-phi(1))) + a_WNM*amp_WNM*cos(b_WNM*c_WNM*(d_WNM + phi(1))) + &
-amp_WNM*cos(c_WNM*(d_WNM + phi(1))) + dsp_WNM))/(a_WNM**4*amp_WNM &
-*cos(b_WNM**4*c_WNM*(d_WNM + phi(1))) + a_WNM**3*amp_WNM*cos( &
-b_WNM**3*c_WNM*(d_WNM + phi(1))) + a_WNM**2*amp_WNM*cos(b_WNM**2* &
-c_WNM*(d_WNM + phi(1))) + a_WNM*amp_WNM*cos(b_WNM*c_WNM*(d_WNM + &
-phi(1))) + amp_WNM*cos(c_WNM*(d_WNM + phi(1))) + dsp_WNM)
 	end select
 	
 	! Symmetries
@@ -683,6 +654,57 @@ pure function Gamma_phidot(phi, phidot) result(Gammaphidot)
 	
 end function Gamma_phidot
 
+! Slow-roll parameter $\epsilon$
+pure function epsilon_sr(phi, phidot, H) result(eps)
+	real, intent(in) :: phi(2), phidot(2), H
+	real             :: eps
+	
+	eps = - Hubbledot(phi, phidot) / H**2 ! $\epsilon \equiv - \dot{H} / H^{2}$
+
+end function epsilon_sr
+
+! Slow-roll parameter $\eta_{\parallel}$ (covariant acceleration projected onto the adiabatic direction)
+pure function eta_sr(phi, phidot, H) result(eta)
+	real, intent(in)     :: phi(2), phidot(2), H
+	real                 :: eta
+	real, dimension(2)   :: phidotdot, Gammaphidotphidot, Dtphidot, T_adb
+	real, dimension(2,2) :: h_AB, Gammaphidot, vbein_AI
+	real                 :: phidot_mag
+	
+	h_AB              = metric(phi)                   ! $h_{AB}$
+	phidotdot         = phi_dot_dot(phi, phidot, H)   ! $\ddot{\varphi}^{A}$
+	Gammaphidot       = Gamma_phidot(phi, phidot)     ! $\Gamma^{A}_{BC} \dot{\varphi}^{C}$
+	Gammaphidotphidot = matmul(Gammaphidot, phidot)   ! $\Gamma^{A}_{BC} \dot{\varphi}^{B} \dot{\varphi}^{C}$
+	Dtphidot          = phidotdot + Gammaphidotphidot ! $\mathcal{D}_{t} \dot{\varphi}^{A}$
+	vbein_AI          = vielbein_ad_is(phi, phidot)   ! $e^{A}_{i}$ (adiabatic-isocurvature vielbein)
+	T_adb             = vbein_AI(:,1)                 ! $e^{A}_{1}$, adiabatic (tangent) direction
+	phidot_mag        = sqrt(sum(h_AB * outer_product(phidot, phidot))) ! $|\dot{\varphi}|$
+	
+	eta = sum(h_AB * outer_product(T_adb, Dtphidot)) / (H * phidot_mag) ! $\eta_{\parallel} \equiv - \frac{h_{AB} \, e^{A}_{1} \, \mathcal{D}_{t}\dot{\varphi}^{B}}{H |\dot{\varphi}|}$
+
+end function eta_sr
+
+! Turn rate $\omega$ (covariant acceleration projected onto the isocurvature direction, in Hubble units)
+pure function turnrate(phi, phidot, H) result(omega)
+	real, intent(in)     :: phi(2), phidot(2), H
+	real                 :: omega
+	real, dimension(2)   :: phidotdot, Gammaphidotphidot, Dtphidot, N_iso
+	real, dimension(2,2) :: h_AB, Gammaphidot, vbein_AI
+	real                 :: phidot_mag
+	
+	h_AB              = metric(phi)                   ! $h_{AB}$
+	phidotdot         = phi_dot_dot(phi, phidot, H)   ! $\ddot{\varphi}^{A}$
+	Gammaphidot       = Gamma_phidot(phi, phidot)     ! $\Gamma^{A}_{BC} \dot{\varphi}^{C}$
+	Gammaphidotphidot = matmul(Gammaphidot, phidot)   ! $\Gamma^{A}_{BC} \dot{\varphi}^{B} \dot{\varphi}^{C}$
+	Dtphidot          = phidotdot + Gammaphidotphidot ! $\mathcal{D}_{t} \dot{\varphi}^{A}$
+	vbein_AI          = vielbein_ad_is(phi, phidot)   ! $e^{A}_{i}$ (adiabatic-isocurvature vielbein)
+	N_iso             = vbein_AI(:,2)                 ! $e^{A}_{2}$, isocurvature direction
+	phidot_mag        = sqrt(sum(h_AB * outer_product(phidot, phidot))) ! $|\dot{\varphi}|$
+	
+	omega = sum(h_AB * outer_product(N_iso, Dtphidot)) / (H * phidot_mag) ! $\omega \equiv \frac{h_{AB} \, e^{A}_{2} \, \mathcal{D}_{t}\dot{\varphi}^{B}}{H |\dot{\varphi}|}$
+
+end function turnrate
+
 ! Frequency-squared matrix $\Omega_{ij}$
 pure function freq_matrix(phi, phidot, H, N, vbein_PT, k_mode) result(W2_ij)
 	real, intent(in) :: phi(2), phidot(2), H, N, vbein_PT(2,2), k_mode
@@ -907,7 +929,7 @@ pure function initialize_phi() result(phi)
 		case ("MVP")
 !			phi = [20.0, 20.0] ! For lambda1_mvp = 1.0 * sqrt(m_mvp)
 !			phi = [6.0 , 6.0 ] ! For lambda1_mvp = 2.0d-3
-			phi = [8.0, 8.0 ]
+			phi = [8.0, 8.0]
 		case ("DEP")
 			phi = [12.0, 12.0]
 	end select
