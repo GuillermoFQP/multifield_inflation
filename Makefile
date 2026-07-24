@@ -1,6 +1,7 @@
 # Configuration
 FC      := gfortran
-FLAGS   := -fopenmp -O3 -fdefault-real-8 -llapack -lblas
+FITSDIR := /opt/local/lib
+FLAGS   := -fopenmp -O3 -fdefault-real-8 -w -L$(FITSDIR) -llapack -lblas -lcfitsio -Wl,-rpath,$(FITSDIR)
 MODULES := multifield_globals.f90 multifield_utils.f90
 
 # Programs
